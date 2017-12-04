@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
+	"github.com/intdxdt/fileglob"
 )
 
 type Ping struct {
@@ -34,7 +35,25 @@ func readMMSIToml(fileName string) *Vessel {
 	return vsl
 }
 
+func readAllVessels(srcs []string) []*Vessel {
+	var vessels = make([]*Vessel, 0)
+	for _, src := range srcs {
+		vs := readMMSIToml(src)
+		vessels = append(vessels, vs)
+	}
+	return vessels
+}
+
 func main() {
-	vs := readMMSIToml("/home/titus/01/godev/src/simplex/streamdp/mmsis/212773000.toml")
-	fmt.Println(vs)
+	var vessels, err = fileglob.Glob(
+		"/home/titus/01/godev/src/simplex/streamdp/mmsis",
+		[]string{"toml"}, false, []string{".git", ".idea"},
+	)
+	if err != nil {
+		panic(err)
+	}
+	var dats = readAllVessels(vessels)
+	fmt.Println(len(dats))
+	//vs := readMMSIToml("/home/titus/01/godev/src/simplex/streamdp/mmsis/212773000.toml")
+	//fmt.Println(vs)
 }
