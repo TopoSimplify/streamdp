@@ -4,6 +4,7 @@ import (
 	zmq "github.com/pebbe/zmq4"
 	"fmt"
 	"flag"
+	"github.com/intdxdt/fileglob"
 )
 
 var Port int
@@ -27,9 +28,5 @@ func main() {
 		reply, _ := requester.Recv(0)
 		fmt.Println("Received ", reply)
 	}
-}
-
-func streamGenerator(){
-
 }
 

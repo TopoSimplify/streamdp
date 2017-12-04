@@ -1,13 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
-	"github.com/intdxdt/fileglob"
+	"time"
 )
 
-type Ping struct {
+type Pings struct {
+	MMSI      int       `toml:"mmsi"`
+	Type      int       `toml:"type"`
+	Course    float64   `toml:"course"`
+	Time      time.Time `toml:"time"`
+	X         float64   `toml:"x"`
+	Y         float64   `toml:"y"`
+	Speed     float64   `toml:"speed"`
+}
+
+type Location struct {
 	Course float64 `toml:"course"`
 	Time   string  `toml:"time"`
 	X      float64 `toml:"x"`
@@ -16,10 +25,10 @@ type Ping struct {
 }
 
 type Vessel struct {
-	MMSI       float64 `toml:"mmsi"`
-	Type       float64 `toml:"type"`
-	Geography  string  `toml:"geog"`
-	Trajectory []*Ping `toml:"traj"`
+	MMSI       float64     `toml:"mmsi"`
+	Type       float64     `toml:"type"`
+	Geography  string      `toml:"geog"`
+	Trajectory []*Location `toml:"traj"`
 }
 
 func readMMSIToml(fileName string) *Vessel {
@@ -42,18 +51,4 @@ func readAllVessels(srcs []string) []*Vessel {
 		vessels = append(vessels, vs)
 	}
 	return vessels
-}
-
-func main() {
-	var vessels, err = fileglob.Glob(
-		"/home/titus/01/godev/src/simplex/streamdp/mmsis",
-		[]string{"toml"}, false, []string{".git", ".idea"},
-	)
-	if err != nil {
-		panic(err)
-	}
-	var dats = readAllVessels(vessels)
-	fmt.Println(len(dats))
-	//vs := readMMSIToml("/home/titus/01/godev/src/simplex/streamdp/mmsis/212773000.toml")
-	//fmt.Println(vs)
 }

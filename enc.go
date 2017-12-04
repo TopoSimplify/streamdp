@@ -9,7 +9,7 @@ import (
 )
 
 // go binary encoder
-func Serialize(v *Vessel) string {
+func Serialize(v interface{}) string {
 	var buf bytes.Buffer
 	var err = gob.NewEncoder(&buf).Encode(v)
 	if err != nil {
