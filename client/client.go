@@ -1,23 +1,21 @@
-//
-//  Hello World client.
-//  Connects REQ socket to tcp://localhost:5555
-//  Sends "Hello" to server, expects "World" back
-//
-
 package main
 
 import (
 	zmq "github.com/pebbe/zmq4"
-
 	"fmt"
+	"flag"
 )
 
+var Port int
+
+func init() {
+	flag.IntVar(&Port, "port", 5555, "listening port")
+}
+
 func main() {
-	//  Socket to talk to server
-	fmt.Println("Connecting to hello world server...")
 	requester, _ := zmq.NewSocket(zmq.REQ)
 	defer requester.Close()
-	requester.Connect("tcp://localhost:5555")
+	requester.Connect(fmt.Sprintf("tcp://localhost:%v", Port))
 
 	for r := 0; r < 10; r++ {
 		// send hello
@@ -30,3 +28,8 @@ func main() {
 		fmt.Println("Received ", reply)
 	}
 }
+
+func streamGenerator(){
+
+}
+
