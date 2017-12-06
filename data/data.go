@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"github.com/naoina/toml"
@@ -31,7 +31,7 @@ type Vessel struct {
 	Trajectory []*Location `toml:"traj"`
 }
 
-func readMMSIToml(fileName string) *Vessel {
+func ReadMMSIToml(fileName string) *Vessel {
 	var vsl = &Vessel{}
 	var txt, err = fileutil.ReadAllOfFile(fileName)
 	if err != nil {
@@ -44,10 +44,10 @@ func readMMSIToml(fileName string) *Vessel {
 	return vsl
 }
 
-func readAllVessels(srcs []string) []*Vessel {
+func ReadAllVessels(srcs []string) []*Vessel {
 	var vessels = make([]*Vessel, 0)
 	for _, src := range srcs {
-		vs := readMMSIToml(src)
+		vs := ReadMMSIToml(src)
 		vessels = append(vessels, vs)
 	}
 	return vessels

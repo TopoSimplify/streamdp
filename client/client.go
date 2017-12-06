@@ -1,32 +1,81 @@
 package main
 
 import (
-	zmq "github.com/pebbe/zmq4"
+	"os"
 	"fmt"
 	"flag"
-	"github.com/intdxdt/fileglob"
+	"log"
+	"net/url"
+	"os/signal"
+	"math/rand"
+	"github.com/gorilla/websocket"
+	"time"
 )
 
 var Port int
+var Host string
 
 func init() {
-	flag.IntVar(&Port, "port", 5555, "listening port")
+	rand.Seed(time.Now().UTC().UnixNano())
+	flag.IntVar(&Port, "port", 8080, "host port")
+	flag.StringVar(&Host, "host", "localhost", "host address")
 }
 
 func main() {
-	requester, _ := zmq.NewSocket(zmq.REQ)
-	defer requester.Close()
-	requester.Connect(fmt.Sprintf("tcp://localhost:%v", Port))
+	flag.Parse()
+	var address = fmt.Sprintf("%v:%v", Host, Port)
 
-	for r := 0; r < 10; r++ {
-		// send hello
-		msg := fmt.Sprintf("Hello %d", r)
-		fmt.Println("Sending ", msg)
-		requester.Send(msg, 0)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
 
-		// Wait for reply:
-		reply, _ := requester.Recv(0)
-		fmt.Println("Received ", reply)
+	var uri = &url.URL{Scheme: "ws", Host: address, Path: "/traffic"}
+	log.Printf("connecting to %s", uri.String())
+
+	var id = fmt.Sprintf("client id : %v", rand.Int())
+
+	var conn = dialURI(uri)
+	defer conn.Close()
+
+	var done = make(chan struct{})
+	defer close(done)
+
+	for {
+		select {
+		case <-interrupt:
+			log.Println("interrupt")
+			err := conn.WriteMessage(
+				websocket.CloseMessage,
+				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			)
+			if err != nil {
+				log.Fatalln("write close:", err)
+				return
+			}
+			return
+		default:
+			err := conn.WriteMessage(websocket.TextMessage, []byte(id))
+			if err != nil {
+				log.Fatalln("write:", err)
+				return
+			}
+			_, message, err := conn.ReadMessage()
+
+			if err != nil {
+				log.Fatalln("read:", err)
+				return
+			}
+			log.Printf("recv: %s", message)
+
+			time.Sleep(1 * time.Second)
+		}
 	}
 }
 
+func dialURI(uri *url.URL) *websocket.Conn {
+	log.Printf("connecting to %s", uri.String())
+	conn, _, err := websocket.DefaultDialer.Dial(uri.String(), nil)
+	if err != nil {
+		log.Fatalln("dial:", err)
+	}
+	return conn
+}

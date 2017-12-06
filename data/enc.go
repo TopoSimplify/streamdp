@@ -1,4 +1,4 @@
-package main
+package data
 
 import (
 	"log"
@@ -26,10 +26,12 @@ func Deserialize(str string) *Vessel {
 		log.Fatalln(`failed base64 Decode`, err)
 	}
 	var buf bytes.Buffer
+
 	_, err = buf.Write(dat)
 	if err != nil {
 		log.Fatalln(`failed to write to buffer`)
 	}
+
 	err = gob.NewDecoder(&buf).Decode(&v)
 	if err != nil {
 		fmt.Println(`failed gob Decode`, err)
