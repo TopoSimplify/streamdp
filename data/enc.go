@@ -1,41 +1,37 @@
 package data
 
 import (
-	"log"
-	"fmt"
 	"bytes"
 	"encoding/gob"
 	"encoding/base64"
 )
 
 // go binary encoder
-func Serialize(v interface{}) string {
+func Serialize(v interface{}) (string, error) {
 	var buf bytes.Buffer
 	var err = gob.NewEncoder(&buf).Encode(v)
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(buf.Bytes())
+	return base64.StdEncoding.EncodeToString(buf.Bytes()), err
 }
 
 // go binary decoder
-func Deserialize(str string) *Vessel {
-	var v *Vessel
+func Deserialize(str string, v interface{}) (error) {
 	var dat, err = base64.StdEncoding.DecodeString(str)
 	if err != nil {
-		log.Fatalln(`failed base64 Decode`, err)
+		return  err
 	}
 	var buf bytes.Buffer
 
 	_, err = buf.Write(dat)
 	if err != nil {
-		log.Fatalln(`failed to write to buffer`)
+		return  err
 	}
 
-	err = gob.NewDecoder(&buf).Decode(&v)
+	err = gob.NewDecoder(&buf).Decode(v)
 	if err != nil {
-		fmt.Println(`failed gob Decode`, err)
+		return  err
 	}
-	return v
+	return  err
 }
-

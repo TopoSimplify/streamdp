@@ -4,16 +4,23 @@ import (
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
 	"time"
+	"fmt"
 )
 
 type Pings struct {
-	MMSI      int       `toml:"mmsi"`
-	Type      int       `toml:"type"`
-	Course    float64   `toml:"course"`
-	Time      time.Time `toml:"time"`
-	X         float64   `toml:"x"`
-	Y         float64   `toml:"y"`
-	Speed     float64   `toml:"speed"`
+	MMSI   float64   `toml:"mmsi"`
+	Type   float64   `toml:"type"`
+	Course float64   `toml:"course"`
+	Time   time.Time `toml:"time"`
+	X      float64   `toml:"x"`
+	Y      float64   `toml:"y"`
+	Speed  float64   `toml:"speed"`
+}
+
+func (p *Pings) String () string {
+	return fmt.Sprintf(
+		`{ MMSI:%v, Type:%v, Course:%v, Time:%v, X:%v, Y:%v, Speed:%v }`,
+		p.MMSI, p.Type, p.Course, p.Time.Unix(), p.X, p.Y, p.Speed )
 }
 
 type Location struct {
