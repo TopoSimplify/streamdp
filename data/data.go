@@ -7,7 +7,13 @@ import (
 	"fmt"
 )
 
-type Pings struct {
+type PingMsg struct {
+	Id        int    `json:"id"`
+	Ping      string `json:"ping"`
+	KeepAlive bool   `json:"keepalive"`
+}
+
+type Ping struct {
 	MMSI   float64   `toml:"mmsi"`
 	Type   float64   `toml:"type"`
 	Course float64   `toml:"course"`
@@ -17,10 +23,10 @@ type Pings struct {
 	Speed  float64   `toml:"speed"`
 }
 
-func (p *Pings) String () string {
+func (p *Ping) String () string {
 	return fmt.Sprintf(
 		`{ MMSI:%v, Type:%v, Course:%v, Time:%v, X:%v, Y:%v, Speed:%v }`,
-		p.MMSI, p.Type, p.Course, p.Time.Unix(), p.X, p.Y, p.Speed )
+		int(p.MMSI), p.Type, p.Course, p.Time.Unix(), p.X, p.Y, p.Speed )
 }
 
 type Location struct {

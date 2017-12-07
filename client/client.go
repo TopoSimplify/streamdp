@@ -17,6 +17,8 @@ import (
 	"io/ioutil"
 	"runtime"
 	"strings"
+	"encoding/json"
+	"github.com/intdxdt/geom"
 )
 
 var Port int
@@ -41,6 +43,29 @@ func main() {
 	vesselPings(msisDir, filter, ignoreDirs, concurProcs)
 }
 
+//post to server
+func postToServer(token string, mmsi int, keepAlive bool) {
+	var pmsg = data.PingMsg{Id: mmsi, Ping: token, KeepAlive: keepAlive}
+	var msg, err = json.Marshal(pmsg)
+	if err != nil {
+		panic(err)
+	}
+	req, err := http.NewRequest("POST", Address, bytes.NewBuffer(msg))
+
+	req.Header.Set("X-Custom-Header", "ping")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil || resp.StatusCode == 500 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Println(body)
+		panic(err)
+	}
+}
+
+//vessel pings
 func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	var datafileStream = make(chan interface{})
 	var exit = make(chan struct{})
@@ -74,6 +99,10 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	//mmsi vessel
 	vessel := func(v *data.Vessel) {
 		defer wg.Done()
+		var id = -1
+
+		//output
+		writeToFile(v)
 
 		for _, loc := range v.Trajectory {
 			select {
@@ -85,7 +114,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 					panic(err)
 				}
 
-				token, err := data.Serialize(data.Pings{
+				token, err := data.Serialize(data.Ping{
 					MMSI:   v.MMSI,
 					Type:   v.Type,
 					Course: loc.Course,
@@ -98,25 +127,11 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 				if err != nil {
 					panic(err)
 				}
-
-				req, err := http.NewRequest("POST",
-					Address, bytes.NewBuffer(
-						[]byte(fmt.Sprintf(`{"ping":"%v"}`, token)),
-					))
-				req.Header.Set("X-Custom-Header", "ping")
-				req.Header.Set("Content-Type", "application/json")
-
-				client := &http.Client{}
-				resp, err := client.Do(req)
-				if err != nil || resp.StatusCode == 500 {
-					body, _ := ioutil.ReadAll(resp.Body)
-					log.Println(body)
-					panic(err)
-				}
-
-				resp.Body.Close()
+				id = int(v.MMSI)
+				postToServer(token, id, true)
 			}
 		}
+		postToServer("", id, false)
 	}
 
 	//now expand one worker into clones of workers
@@ -150,4 +165,25 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	//wait for all the clones to be done
 	//in a new go routine
 	<-done
+}
+
+func writeToFile(trj *data.Vessel) {
+	var fname = fmt.Sprintf("/home/titus/01/godev/src/simplex/streamdp/mmLnData/%v.txt", int(trj.MMSI))
+	// If the file doesn't exist, create it, or append to the file
+	f, err := os.OpenFile(fname, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	coords := make([]*geom.Point, 0)
+	for _, p := range trj.Trajectory {
+		coords = append(coords, geom.NewPointXY(p.X, p.Y))
+	}
+	var ln = geom.NewLineString(coords)
+	if _, err := f.WriteString(ln.WKT() + "\n"); err != nil {
+		log.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		log.Fatal(err)
+	}
 }
