@@ -14,6 +14,8 @@ type ServerConfig struct {
 	Database               string  `toml:"Database"`
 	User                   string  `toml:"User"`
 	Table                  string  `toml:"Table"`
+	SRID                   int     `toml:"SRID"`
+	Dim                    int     `toml:"Dim"`
 	Threshold              float64 `toml:"Threshold"`
 	MinDist                float64 `toml:"MinDist"`
 	RelaxDist              float64 `toml:"RelaxDist"`
@@ -23,8 +25,8 @@ type ServerConfig struct {
 	DirRelation            bool    `toml:"DirRelation"`
 }
 
-func (cfg *ServerConfig) DBConfig() *db.Config {
-	return &db.Config{
+func (cfg *ServerConfig) DBConfig() db.Config {
+	return db.Config{
 		Host:           cfg.DBHost,
 		Password:       cfg.Password,
 		Database:       cfg.Database,

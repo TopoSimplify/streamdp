@@ -46,6 +46,8 @@ func main() {
 //post to server
 func postToServer(token string, mmsi int, keepAlive bool) {
 	var pmsg = data.PingMsg{Id: mmsi, Ping: token, KeepAlive: keepAlive}
+	fmt.Println(">>> server :", pmsg)
+
 	var msg, err = json.Marshal(pmsg)
 	if err != nil {
 		panic(err)
@@ -101,9 +103,6 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 		defer wg.Done()
 		var id = -1
 
-		//output
-		writeToFile(v)
-
 		for _, loc := range v.Trajectory {
 			select {
 			case <-exit:
@@ -114,7 +113,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 					panic(err)
 				}
 
-				token, err := data.Serialize(data.Ping{
+				ping := data.Ping {
 					MMSI:   v.MMSI,
 					Type:   v.Type,
 					Course: loc.Course,
@@ -122,12 +121,17 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 					X:      loc.X,
 					Y:      loc.Y,
 					Speed:  loc.Speed,
-				})
+				}
 
+				token, err := data.Serialize(ping)
 				if err != nil {
 					panic(err)
 				}
-				id = int(v.MMSI)
+
+				if id < 0 {
+					id = int(ping.MMSI)
+				}
+
 				postToServer(token, id, true)
 			}
 		}

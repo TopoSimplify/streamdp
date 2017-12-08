@@ -57,27 +57,29 @@ func (self *OPW) ScoreRelation(val float64) bool {
 	return val > self.Options.Threshold
 }
 
-func (self *OPW) Push(ping *data.Ping) {
+func (self *OPW) Push(ping *data.Ping) *db.Node {
 	self.float += 1
+	var node *db.Node
 	var pt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
 	self.Cache = append(self.Cache, &Pt{Point: pt, Ping: ping, I: self.float})
 	if len(self.Cache) < MinimumCacheLimit {
-		return
+		return node
 	}
 
 	var _, val = MaxOffset(self.Cache)
 	if self.ScoreRelation(val) || len(self.Cache) >= MaximumCacheLimit {
 		if self.Type == NOPW {
-			self.aggregateNOPW()
+			node = self.aggregateNOPW()
 		} else if self.Type == BOPW {
-			self.aggregateBOPW()
+			node = self.aggregateBOPW()
 		} else {
 			panic("unknown open window type")
 		}
 	}
+	return node
 }
 
-func (self *OPW) Done() {
+func (self *OPW) Done() []*db.Node{
 	var nd *db.Node
 	if (self.Type == NOPW) && !self.Cache.IsEmpty() && !self.Nodes.IsEmpty() {
 		nd = self.drainCache(self.Nodes.Pop())
@@ -89,37 +91,51 @@ func (self *OPW) Done() {
 		nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
 		self.Nodes.Append(nd)
 	}
+	return self.Nodes.AsSlice()
 }
 
 func (self *OPW) lastVal() *Pt {
 	return self.Cache[len(self.Cache)-1]
 }
 
-func (self *OPW) aggregateNOPW() {
-	var nth = self.lastVal()
+func (self *OPW) popMaturedNode() *db.Node {
+	var node *db.Node
+	if len(self.Nodes) >= 2 {
+		node = self.Nodes.PopLeft()
+	}
+	return node
+}
 
+func (self *OPW) aggregateNOPW() *db.Node {
+	var nth = self.lastVal()
 	var coords = self.cacheAsPoints()
 	var nd = self.createNode(coords, self.anchor, self.float)
+
 	self.Nodes.Append(nd)
 
 	self.emptyCache()
 	self.Cache = append(self.Cache, nth)
 	self.anchor = nth.I
+
+	return self.popMaturedNode()
 }
 
-func (self *OPW) aggregateBOPW() {
+func (self *OPW) aggregateBOPW() *db.Node {
 	var last, nth *Pt
 	last, self.Cache = Pop(self.Cache)
 	nth = self.lastVal()
 
 	var coords = self.cacheAsPoints()
 	var nd = self.createNode(coords, self.anchor, self.float)
+
 	self.Nodes.Append(nd)
 
 	self.emptyCache()
 	self.Cache = append(self.Cache, nth)
 	self.Cache = append(self.Cache, last)
 	self.anchor = nth.I
+
+	return self.popMaturedNode()
 }
 
 func (self *OPW) drainCache(nd *db.Node) *db.Node {
@@ -137,6 +153,7 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	//copy node coordinates
 	var cache = make([]*geom.Point, len(nd.Polyline().Coordinates))
 	copy(cache, nd.Polyline().Coordinates)
+
 	//add rest to node coords
 	for _, pt := range rest {
 		cache = append(cache, pt.Point)

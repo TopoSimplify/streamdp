@@ -1,18 +1,33 @@
 package main
 
 import (
+	"os"
 	"simplex/ctx"
 	"simplex/node"
+	"path/filepath"
 	"github.com/intdxdt/geom"
 	"github.com/intdxdt/math"
 	"github.com/intdxdt/rtree"
 	"github.com/intdxdt/deque"
-	"os"
-	"path/filepath"
+	"math/rand"
+	"time"
 )
-const GeomColumn = "geom"
-const IdColumn = "id"
-const EpsilonDist = 1.0e-5
+const GeomColumn    = "geom"
+const IdColumn      = "id"
+const EpsilonDist   = 1.0e-5
+
+func init(){
+	rand.Seed(time.Now().UnixNano())
+}
+
+func randTableName(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charSet[rand.Intn(len(charSet))]
+	}
+	return string(b)
+}
+
 
 //Convert slice of interface to ints
 func asInts(iter []interface{}) []int {

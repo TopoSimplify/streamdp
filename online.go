@@ -26,8 +26,6 @@ type OnlineDP struct {
 	Independent bool
 }
 
-
-
 func NewOnlineDP(src, constraints *db.DataSrc, options *opts.Opts,
 	offsetScore lnr.ScoreFn, independent bool) *OnlineDP {
 	return &OnlineDP{

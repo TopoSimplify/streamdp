@@ -1,10 +1,10 @@
 package data
 
 import (
+	"fmt"
+	"time"
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
-	"time"
-	"fmt"
 )
 
 type PingMsg struct {

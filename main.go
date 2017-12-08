@@ -33,6 +33,7 @@ func init() {
 func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
 	var server = NewServer("localhost:8000", DebugMode)
 	server.Run()
 }
