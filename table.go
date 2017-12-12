@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"fmt"
 	"bytes"
 	"text/template"
 )
@@ -10,7 +11,6 @@ const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 //TODO: dataset restarts beginning on start - change when real online
 var onlineTblTemplate = `
-DROP TABLE IF EXISTS {{.Table}} CASCADE;
 CREATE TABLE IF NOT EXISTS {{.Table}} (
     id  SERIAL NOT NULL,
     i INT NOT NULL,
@@ -47,6 +47,11 @@ func (s *Server) initCreateOnlineTable() error {
 	var err = onlineTemplate.Execute(&query, s.Config)
 	if err != nil {
 		log.Fatalln(err)
+	}
+	var tblSQl = fmt.Sprintf(`DROP TABLE IF EXISTS %v CASCADE;`, s.Config.Table)
+	_, err = s.Src.Exec(tblSQl)
+	if err != nil {
+		log.Panic(err)
 	}
 	_, err = s.Src.Exec(query.String())
 	return err

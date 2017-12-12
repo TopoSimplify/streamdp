@@ -13,7 +13,7 @@ import (
 type OPWType int
 
 const (
-	NOPW              OPWType = iota
+	NOPW      OPWType = iota
 	BOPW
 	MinimumCacheLimit = 3
 	MaximumCacheLimit = 300

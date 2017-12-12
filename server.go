@@ -17,6 +17,7 @@ func NewServer(address string, mode int) *Server {
 		"user=%s password=%s dbname=%s sslmode=disable",
 		cfg.User, cfg.Password, cfg.Database,
 	))
+
 	if err != nil {
 		panic(err)
 	}
@@ -57,14 +58,18 @@ func (s *Server) Run() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	router.POST("/ping", s.trafficRouter)
+	router.POST("/history/clear", s.clearHistory)
 	router.Run(s.Address)
+}
+
+func (s *Server) clearHistory(ctx *gin.Context) {
+	VesselHistory.Clear()
+	ctx.JSON(Success, gin.H{"message": "success"})
 }
 
 func (s *Server) trafficRouter(ctx *gin.Context) {
 	var msg = &data.PingMsg{}
 	var err = ctx.BindJSON(msg)
-
-	fmt.Println(">>> ping msg :", msg)
 
 	if err != nil {
 		panic(err)

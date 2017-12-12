@@ -16,7 +16,6 @@ func (s *Server) aggregatePings(msg *data.PingMsg) error {
 		}
 
 		id = int(ping.MMSI)
-		//*db.Node
 		if n := VesselHistory.Update(id, ping); n != nil {
 			nds = append(nds, n)
 		}
@@ -31,10 +30,13 @@ func (s *Server) aggregatePings(msg *data.PingMsg) error {
 
 	if len(nds) > 0 {
 		var insertSQL = nds[0].InsertSQL(s.Config.Table, s.Config.SRID, nds...)
-		_, err := s.Src.Exec(insertSQL)
-		if err != nil {
+		if _, err := s.Src.Exec(insertSQL); err != nil {
 			panic(err)
 		}
+	}
+
+	if !msg.KeepAlive {
+		VesselHistory.Delete(msg.Id)
 	}
 
 	return nil
