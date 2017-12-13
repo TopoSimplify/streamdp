@@ -3,13 +3,12 @@ package onlinedp
 import (
 	"simplex/db"
 	"simplex/rng"
-	"simplex/lnr"
 	"github.com/intdxdt/geom"
 )
 
 //split hull at vertex with
 //maximum_offset offset -- k
-func AtScoreSelection(hull *db.Node, scoreFn lnr.ScoreFn, gfn geom.GeometryFn) (*db.Node, *db.Node) {
+func AtScoreSelection(hull *db.Node, scoreFn ScoreFn, gfn geom.GeometryFn) (*db.Node, *db.Node) {
 	var coordinates = hull.Coordinates
 	var rg = hull.Range
 	var i, j = rg.I, rg.J

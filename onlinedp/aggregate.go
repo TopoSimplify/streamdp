@@ -20,7 +20,7 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
 
 	go func() {
 		var query = fmt.Sprintf(
-			"SELECT DISTINCT fid, part  FROM %v ORDER BY fid asc, part asc;",
+			`SELECT DISTINCT fid, part  FROM %v ORDER BY fid asc, part asc;`,
 			self.Src.NodeTable,
 		)
 		var h, err = self.Src.Query(query)

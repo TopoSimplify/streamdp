@@ -112,9 +112,8 @@ func (self *OnlineDP) MarkNodesForDeformation(selections []int) int {
 }
 
 func (self *OnlineDP) FindAndMarkNullStateAsCollapsible() {
-	var query = fmt.Sprintf(`
-			UPDATE %v SET status=%v WHERE status=%v;
-			`,
+	var query = fmt.Sprintf(
+		`UPDATE %v SET status=%v WHERE status=%v;`,
 		self.Src.NodeTable, Collapsible, NullState,
 	)
 	var _, err = self.Src.Exec(query)
@@ -134,7 +133,7 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 
 	go func() {
 		var query = fmt.Sprintf(
-			"SELECT id, fid, gob  FROM  %v WHERE status=%v;",
+			`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
 			self.Src.NodeTable, SplitNode,
 		)
 		var h, err = self.Src.Query(query)

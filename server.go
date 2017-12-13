@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"simplex/db"
 	"database/sql"
 	_ "github.com/lib/pq"
 	"simplex/streamdp/data"
 	"gopkg.in/gin-gonic/gin.v1"
-	"strings"
+	"simplex/streamdp/onlinedp"
 )
 
 func NewServer(address string, mode int) *Server {
 	var server = (&Server{Address: address, Mode: mode}).loadConfig()
 	var cfg = server.Config.DBConfig()
+
 	var sqlsrc, err = sql.Open("postgres", fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
 		cfg.User, cfg.Password, cfg.Database,
@@ -43,11 +45,16 @@ type Server struct {
 
 func (s *Server) init() {
 	var simpleType = strings.ToLower(s.Config.SimplficationType)
+
 	if simpleType == "nopw" {
 		SimplificationType = NOPW
 	} else if simpleType == "bopw" {
 		SimplificationType = BOPW
 	}
+
+	var oln = onlinedp.OnlineDP{}
+	fmt.Println(oln)
+
 	//create online table
 	if err := s.initCreateOnlineTable(); err != nil {
 		log.Fatalln(err)

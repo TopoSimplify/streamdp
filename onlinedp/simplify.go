@@ -1,7 +1,6 @@
 package onlinedp
 
 func (self *OnlineDP) Simplify() {
-	self.Decompose()
 	// 0.while has more deformables : loop
 	for self.HasMoreDeformables() {
 		// 1.find and mark deformable nodes

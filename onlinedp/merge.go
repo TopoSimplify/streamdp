@@ -3,15 +3,14 @@ package onlinedp
 import (
 	"simplex/db"
 	"simplex/rng"
-	"simplex/lnr"
 	"simplex/common"
 	"github.com/intdxdt/geom"
 )
 
 //Merge contiguous fragments based combined score
 func (self *OnlineDP) ContiguousFragmentsAtThreshold(
-	scoreFn lnr.ScoreFn, ha, hb *db.Node, gfn geom.GeometryFn,
-) *db.Node {
+	scoreFn ScoreFn, ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
+
 	if !ha.Range.Contiguous(hb.Range) {
 		panic("node are not contiguous")
 	}

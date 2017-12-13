@@ -2,8 +2,8 @@ package onlinedp
 
 import (
 	"simplex/db"
-	"simplex/lnr"
 	"simplex/opts"
+	"github.com/intdxdt/geom"
 )
 
 const (
@@ -18,22 +18,21 @@ const (
 	EpsilonDist       = 1.0e-5
 )
 
+type ScoreFn func([]*geom.Point) (int, float64)
 type OnlineDP struct {
 	Src         *db.DataSrc
 	Const       *db.DataSrc
 	Options     *opts.Opts
-	Score       lnr.ScoreFn
+	Score       ScoreFn
 	Independent bool
 }
-
 
 func (self *OnlineDP) ScoreRelation(val float64) bool {
 	return val <= self.Options.Threshold
 }
 
-
 func NewOnlineDP(src, constraints *db.DataSrc, options *opts.Opts,
-	offsetScore lnr.ScoreFn, independent bool) *OnlineDP {
+	offsetScore ScoreFn, independent bool) *OnlineDP {
 	return &OnlineDP{
 		Src:         src,
 		Const:       constraints,
@@ -42,4 +41,3 @@ func NewOnlineDP(src, constraints *db.DataSrc, options *opts.Opts,
 		Independent: independent,
 	}
 }
-
