@@ -20,12 +20,12 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 
 	go func() {
 		var query = fmt.Sprintf(
-			"SELECT id, fid, gob  FROM  %v WHERE status=%v;",
+			`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
 			self.Src.NodeTable, NullState,
 		)
 		var h, err = self.Src.Query(query)
 		if err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 		var id, fid int
 		var gob string
@@ -57,12 +57,13 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 func (self *OnlineDP) MarkNullState(temp string) {
 	const  bufferSize = 200
 	var buf = make([]int, 0)
-
-	var query = fmt.Sprintf("SELECT id  FROM  %v;", temp)
+	var query = fmt.Sprintf(`SELECT id  FROM  %v;`, temp)
 	var h, err = self.Src.Query(query)
+
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
+
 	var id int
 	for h.Next() {
 		h.Scan(&id)
@@ -72,6 +73,7 @@ func (self *OnlineDP) MarkNullState(temp string) {
 			buf = make([]int, 0)//reset
 		}
 	}
+
 	//flush
 	if len(buf) > 0 {
 		self.MarkNodesForDeformation(buf)
@@ -85,19 +87,18 @@ func (self *OnlineDP) MarkNodesForDeformation(selections []int) int {
 	var buf bytes.Buffer
 	var k = len(selections) - 1
 	for i, nid := range selections {
-		buf.WriteString(fmt.Sprintf("(%v, %v)", nid, SplitNode))
+		buf.WriteString(fmt.Sprintf(`(%v, %v)`, nid, SplitNode))
 		if i < k {
-			buf.WriteString(",")
+			buf.WriteString(`,`)
 		}
 	}
 	var query = fmt.Sprintf(`
-			UPDATE %v AS u
-			SET status= u2.status
-			FROM
-				( VALUES %v ) AS u2 ( id, status )
-			WHERE
-				u2.id = u.id;
-		`,
+		UPDATE %v AS u
+		SET status= u2.status
+		FROM
+			( VALUES %v ) AS u2 ( id, status )
+		WHERE
+			u2.id = u.id;`,
 		self.Src.NodeTable, buf.String(),
 	)
 	var r, err = self.Src.Exec(query)

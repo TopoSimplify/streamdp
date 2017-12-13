@@ -6,16 +6,16 @@ import (
 	"simplex/lnr"
 	"simplex/rng"
 	"simplex/opts"
+	"simplex/streamdp/pt"
 	"simplex/streamdp/data"
 	"github.com/intdxdt/geom"
-	"simplex/streamdp/pt"
 	"simplex/streamdp/offset"
 )
 
 type OPWType int
 
 const (
-	NOPW      OPWType = iota
+	NOPW              OPWType = iota
 	BOPW
 	MinimumCacheLimit = 3
 	MaximumCacheLimit = 300
@@ -62,12 +62,12 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 		return node
 	}
 
-	var _, val = offset.OPWMaxOffset(self.Cache)
+	var index, val = offset.OPWMaxOffset(self.Cache)
 	if self.ScoreRelation(val) || len(self.Cache) >= MaximumCacheLimit {
 		if self.Type == NOPW {
-			node = self.aggregateNOPW()
+			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {
-			node = self.aggregateBOPW()
+			node = self.aggregateBOPW(index)
 		} else {
 			panic("unknown open window type")
 		}
@@ -75,7 +75,7 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 	return node
 }
 
-func (self *OPW) Done() []*db.Node{
+func (self *OPW) Done() []*db.Node {
 	var nd *db.Node
 	if (self.Type == NOPW) && !self.Cache.IsEmpty() && !self.Nodes.IsEmpty() {
 		nd = self.drainCache(self.Nodes.Pop())
@@ -102,21 +102,28 @@ func (self *OPW) popMaturedNode() *db.Node {
 	return node
 }
 
-func (self *OPW) aggregateNOPW() *db.Node {
-	var nth = self.lastVal()
+func (self *OPW) aggregateNOPW(index int) *db.Node {
+	var stash = self.Cache[index+1:]
+	stash = stash[:len(stash):len(stash)]
+
+	self.Cache = self.Cache[:index+1]
+	self.Cache = self.Cache[:len(self.Cache):len(self.Cache)]
+
+	var nth    = self.lastVal()
 	var coords = self.cacheAsPoints()
-	var nd = self.createNode(coords, self.anchor, self.float)
+	var nd     = self.createNode(coords, self.anchor, self.float)
 
 	self.Nodes.Append(nd)
 
 	self.emptyCache()
-	self.Cache = append(self.Cache, nth)
+	self.Cache  = append(self.Cache, nth)
+	self.Cache  = append(self.Cache, stash...)
 	self.anchor = nth.I
 
 	return self.popMaturedNode()
 }
 
-func (self *OPW) aggregateBOPW() *db.Node {
+func (self *OPW) aggregateBOPW(index int) *db.Node {
 	var last, nth *pt.Pt
 	last, self.Cache = Pop(self.Cache)
 	nth = self.lastVal()
@@ -127,8 +134,7 @@ func (self *OPW) aggregateBOPW() *db.Node {
 	self.Nodes.Append(nd)
 
 	self.emptyCache()
-	self.Cache = append(self.Cache, nth)
-	self.Cache = append(self.Cache, last)
+	self.Cache = append(self.Cache, nth, last)
 	self.anchor = nth.I
 
 	return self.popMaturedNode()
@@ -141,8 +147,8 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 
 	//copy Cache
 	copy(rest, self.Cache)
-	for _, pt := range rest {
-		xrng = append(xrng, pt.I)
+	for _, pnt := range rest {
+		xrng = append(xrng, pnt.I)
 	}
 	sort.Ints(xrng)
 
@@ -193,8 +199,8 @@ func NodeGeometry(coordinates []*geom.Point) geom.Geometry {
 }
 
 func Pop(a []*pt.Pt) (*pt.Pt, []*pt.Pt) {
-	var v *pt.Pt
 	var n int
+	var v *pt.Pt
 	if len(a) == 0 {
 		return nil, a
 	}

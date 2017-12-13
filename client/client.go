@@ -14,6 +14,7 @@ var Port int
 var Host string
 var Address string
 var ClearHistoryAddress string
+var SimplifyAddress string
 
 const concurProcs = 8
 const GeomColumn = "geom"
@@ -35,6 +36,7 @@ func main() {
 	var filter = []string{"toml"}
 
 	ClearHistoryAddress = fmt.Sprintf("http://%v:%v/history/clear", Host, Port)
+	SimplifyAddress = fmt.Sprintf("http://%v:%v/simplify", Host, Port)
 	Address = fmt.Sprintf("http://%v:%v/ping", Host, Port)
 
 	var serverCfg = loadConfig(tomlpath)
@@ -55,6 +57,10 @@ func main() {
 		NodeTable: serverCfg.Table,
 	}
 	initCreateOnlineTable(src, serverCfg)
-	clearHistory(ClearHistoryAddress) //clear mmsi history
+	//clear history
+	runProcess(ClearHistoryAddress)
+	//vessel pings
 	vesselPings(msisDir, filter, ignoreDirs, concurProcs)
+	//simplify
+	runProcess(SimplifyAddress)
 }
