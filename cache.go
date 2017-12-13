@@ -1,8 +1,10 @@
 package main
 
-type Cache []*Pt
+import "simplex/streamdp/pt"
 
-func (self *Cache) Append(o *Pt) {
+type Cache []*pt.Pt
+
+func (self *Cache) Append(o *pt.Pt) {
 	*self = append(*self, o)
 }
 func (self *Cache) IsEmpty() bool {
@@ -12,7 +14,7 @@ func (self *Cache) Size() int {
 	return len(*self)
 }
 
-func (self *Cache) Pop() *Pt {
+func (self *Cache) Pop() *pt.Pt {
 	if self.IsEmpty() {
 		panic("attempt to pop from an empty slice")
 	}

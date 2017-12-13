@@ -8,6 +8,16 @@ import (
 	"log"
 )
 
+func loadConfig(filename string) *ServerConfig {
+	var cfg = &ServerConfig{}
+	var err = cfg.Load(filename)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return cfg
+}
+
+
 type ServerConfig struct {
 	ServerAddress          string  `toml:"ServerAddress"`
 	DBHost                 string  `toml:"DBHost"`
@@ -59,12 +69,3 @@ func (cfg *ServerConfig) Load(fileName string) error {
 	return toml.Unmarshal([]byte(txt), cfg)
 }
 
-
-func loadConfig(filename string) *ServerConfig {
-	var cfg = &ServerConfig{}
-	var err = cfg.Load(filename)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	return cfg
-}

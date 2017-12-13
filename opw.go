@@ -8,6 +8,8 @@ import (
 	"simplex/opts"
 	"simplex/streamdp/data"
 	"github.com/intdxdt/geom"
+	"simplex/streamdp/pt"
+	"simplex/streamdp/offset"
 )
 
 type OPWType int
@@ -19,13 +21,7 @@ const (
 	MaximumCacheLimit = 300
 )
 
-type Pt struct {
-	*geom.Point
-	Ping *data.Ping
-	I    int
-}
-
-//Type OPW
+//SimplificationType OPW
 type OPW struct {
 	Id      int
 	Part    int
@@ -45,7 +41,7 @@ func NewOPW(options *opts.Opts, opwType OPWType, offsetScore lnr.ScoreFn) *OPW {
 		Nodes:   make(DBNodes, 0),
 		Options: options,
 		Score:   offsetScore,
-		Cache:   []*Pt{},
+		Cache:   []*pt.Pt{},
 		Type:    opwType,
 		anchor:  0,
 		float:   -1,
@@ -60,13 +56,13 @@ func (self *OPW) ScoreRelation(val float64) bool {
 func (self *OPW) Push(ping *data.Ping) *db.Node {
 	self.float += 1
 	var node *db.Node
-	var pt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
-	self.Cache = append(self.Cache, &Pt{Point: pt, Ping: ping, I: self.float})
+	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
+	self.Cache = append(self.Cache, &pt.Pt{Point: pnt, Ping: ping, I: self.float})
 	if len(self.Cache) < MinimumCacheLimit {
 		return node
 	}
 
-	var _, val = MaxOffset(self.Cache)
+	var _, val = offset.MaxOffset(self.Cache)
 	if self.ScoreRelation(val) || len(self.Cache) >= MaximumCacheLimit {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW()
@@ -94,7 +90,7 @@ func (self *OPW) Done() []*db.Node{
 	return self.Nodes.AsSlice()
 }
 
-func (self *OPW) lastVal() *Pt {
+func (self *OPW) lastVal() *pt.Pt {
 	return self.Cache[len(self.Cache)-1]
 }
 
@@ -121,7 +117,7 @@ func (self *OPW) aggregateNOPW() *db.Node {
 }
 
 func (self *OPW) aggregateBOPW() *db.Node {
-	var last, nth *Pt
+	var last, nth *pt.Pt
 	last, self.Cache = Pop(self.Cache)
 	nth = self.lastVal()
 
@@ -141,7 +137,7 @@ func (self *OPW) aggregateBOPW() *db.Node {
 func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	var xrng = []int{nd.Range.I, nd.Range.J}
 	var n = len(self.Cache)
-	var rest = make([]*Pt, n, n)
+	var rest = make([]*pt.Pt, n, n)
 
 	//copy Cache
 	copy(rest, self.Cache)
@@ -155,8 +151,8 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	copy(cache, nd.Polyline().Coordinates)
 
 	//add rest to node coords
-	for _, pt := range rest {
-		cache = append(cache, pt.Point)
+	for _, pnt := range rest {
+		cache = append(cache, pnt.Point)
 	}
 
 	//new range
@@ -167,7 +163,7 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 }
 
 func (self *OPW) emptyCache() {
-	self.Cache = []*Pt{}
+	self.Cache = []*pt.Pt{}
 }
 
 func (self *OPW) cacheAsPoints() []*geom.Point {
@@ -196,8 +192,8 @@ func NodeGeometry(coordinates []*geom.Point) geom.Geometry {
 	return g
 }
 
-func Pop(a []*Pt) (*Pt, []*Pt) {
-	var v *Pt
+func Pop(a []*pt.Pt) (*pt.Pt, []*pt.Pt) {
+	var v *pt.Pt
 	var n int
 	if len(a) == 0 {
 		return nil, a

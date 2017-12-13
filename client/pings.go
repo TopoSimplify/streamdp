@@ -18,7 +18,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	defer close(exit)
 	fmt.Println("\033c")
 	go func() {
-		var s = spinner.NewSpinner("mmsi pings ...", exit)
+		var s = spinner.NewSpinner("vessel pings ...", exit)
 		s.Start()
 	}()
 

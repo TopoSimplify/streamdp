@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"simplex/streamdp/data"
 	"gopkg.in/gin-gonic/gin.v1"
+	"strings"
 )
 
 func NewServer(address string, mode int) *Server {
@@ -41,6 +42,12 @@ type Server struct {
 }
 
 func (s *Server) init() {
+	var simpleType = strings.ToLower(s.Config.SimplficationType)
+	if simpleType == "nopw" {
+		SimplificationType = NOPW
+	} else if simpleType == "bopw" {
+		SimplificationType = BOPW
+	}
 	//create online table
 	if err := s.initCreateOnlineTable(); err != nil {
 		log.Fatalln(err)

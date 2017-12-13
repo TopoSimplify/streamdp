@@ -41,7 +41,7 @@ func (h *History) Update(id int, ping *data.Ping) *db.Node {
 	h.Lock()
 	//----------------------------------------------
 		if h.m[id] == nil {
-			h.m[id] = NewOPW(Options, Type, Offseter)
+			h.m[id] = NewOPW(Options, SimplificationType, Offseter)
 			h.m[id].Id = id
 		}
 		node = h.m[id].Push(ping)

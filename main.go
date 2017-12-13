@@ -17,11 +17,10 @@ const Success = 200
 
 var VesselHistory *History
 var Options *opts.Opts
-var Type OPWType
+var SimplificationType = NOPW
 var Offseter = offset.MaxOffset
 
 func init() {
-	Type = NOPW
 	VesselHistory = NewHistory()
 	Options = &opts.Opts{Threshold: 5000}
 	Offseter = offset.MaxOffset
@@ -35,5 +34,6 @@ func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	var server = NewServer("localhost:8000", DebugMode)
+
 	server.Run()
 }
