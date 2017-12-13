@@ -7,9 +7,11 @@ type Cache []*pt.Pt
 func (self *Cache) Append(o *pt.Pt) {
 	*self = append(*self, o)
 }
+
 func (self *Cache) IsEmpty() bool {
 	return self.Size() == 0
 }
+
 func (self *Cache) Size() int {
 	return len(*self)
 }

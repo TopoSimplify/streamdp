@@ -62,7 +62,7 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 		return node
 	}
 
-	var _, val = offset.MaxOffset(self.Cache)
+	var _, val = offset.OPWMaxOffset(self.Cache)
 	if self.ScoreRelation(val) || len(self.Cache) >= MaximumCacheLimit {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW()
