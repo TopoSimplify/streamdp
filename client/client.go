@@ -62,5 +62,5 @@ func main() {
 	//vessel pings
 	vesselPings(msisDir, filter, ignoreDirs, concurProcs)
 	//simplify
-	runProcess(SimplifyAddress)
+	//runProcess(SimplifyAddress)
 }
