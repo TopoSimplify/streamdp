@@ -28,7 +28,7 @@ type OPW struct {
 	Nodes   DBNodes
 	Options *opts.Opts
 	Score   lnr.ScoreFn
-	Cache   Cache
+	cache   Cache
 	Type    OPWType
 
 	anchor int
@@ -41,7 +41,7 @@ func NewOPW(options *opts.Opts, opwType OPWType, offsetScore lnr.ScoreFn) *OPW {
 		Nodes:   make(DBNodes, 0),
 		Options: options,
 		Score:   offsetScore,
-		Cache:   []*pt.Pt{},
+		cache:   make(Cache, 0),
 		Type:    opwType,
 		anchor:  0,
 		float:   -1,
@@ -57,13 +57,13 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 	self.float += 1
 	var node *db.Node
 	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
-	self.Cache = append(self.Cache, &pt.Pt{Point: pnt, Ping: ping, I: self.float})
-	if len(self.Cache) < MinimumCacheLimit {
+	self.cache = append(self.cache, &pt.Pt{Point: pnt, Ping: ping, I: self.float})
+	if len(self.cache) < MinimumCacheLimit {
 		return node
 	}
 
-	var index, val = offset.OPWMaxOffset(self.Cache)
-	if self.ScoreRelation(val) || len(self.Cache) >= MaximumCacheLimit {
+	var index, val = offset.OPWMaxOffset(self.cache)
+	if self.ScoreRelation(val) || (len(self.cache) >= MaximumCacheLimit) {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {
@@ -77,21 +77,17 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 
 func (self *OPW) Done() []*db.Node {
 	var nd *db.Node
-	if (self.Type == NOPW) && !self.Cache.IsEmpty() && !self.Nodes.IsEmpty() {
+	if (self.Type == NOPW) && !self.cache.isEmpty() && !self.Nodes.IsEmpty() {
 		nd = self.drainCache(self.Nodes.Pop())
 		self.Nodes.Append(nd)
-	} else if (self.Type == BOPW) && !self.Cache.IsEmpty() && !self.Nodes.IsEmpty() {
+	} else if (self.Type == BOPW) && !self.cache.isEmpty() && !self.Nodes.IsEmpty() {
 		nd = self.drainCache(self.Nodes.Pop())
 		self.Nodes.Append(nd)
-	} else if self.Cache.Size() > 1 && self.Nodes.IsEmpty() {
+	} else if self.cache.size() > 1 && self.Nodes.IsEmpty() {
 		nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
 		self.Nodes.Append(nd)
 	}
 	return self.Nodes.AsSlice()
-}
-
-func (self *OPW) lastVal() *pt.Pt {
-	return self.Cache[len(self.Cache)-1]
 }
 
 func (self *OPW) popMaturedNode() *db.Node {
@@ -102,39 +98,44 @@ func (self *OPW) popMaturedNode() *db.Node {
 	return node
 }
 
+func (self *OPW) floatAnchor() (int, int) {
+	return self.cache.first().I, self.cache.last().I
+}
+
 func (self *OPW) aggregateNOPW(index int) *db.Node {
-	var stash = self.Cache[index+1:]
-	stash = stash[:len(stash):len(stash)]
+	var n int
+	var stash = self.cache[index+1:]
+	n = len(stash)
+	stash = stash[:n:n]
 
-	self.Cache = self.Cache[:index+1]
-	self.Cache = self.Cache[:len(self.Cache):len(self.Cache)]
+	//restrict from 0 to index
+	self.cache = self.cache[:index+1]
+	n = len(self.cache)
+	self.cache = self.cache[:n:n]
 
-	var nth    = self.lastVal()
-	var coords = self.cacheAsPoints()
-	var nd     = self.createNode(coords, self.anchor, self.float)
+	self.anchor, self.float = self.floatAnchor()
+	var nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
 
 	self.Nodes.Append(nd)
 
-	self.emptyCache()
-	self.Cache  = append(self.Cache, nth)
-	self.Cache  = append(self.Cache, stash...)
-	self.anchor = nth.I
+	var nth = self.cache.last()
+	self.cache.empty().append(nth).append(stash...)
+	self.anchor, self.float = self.floatAnchor()
 
 	return self.popMaturedNode()
 }
 
 func (self *OPW) aggregateBOPW(index int) *db.Node {
-	var last, nth *pt.Pt
-	last, self.Cache = Pop(self.Cache)
-	nth = self.lastVal()
+	var last = self.cache.pop()                  //pop float
+	self.anchor, self.float = self.floatAnchor() //update: anchor, float
 
-	var coords = self.cacheAsPoints()
-	var nd = self.createNode(coords, self.anchor, self.float)
+	//create node
+	var nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
 
 	self.Nodes.Append(nd)
 
-	self.emptyCache()
-	self.Cache = append(self.Cache, nth, last)
+	var nth = self.cache.last()
+	self.cache.empty().append(nth).append(last)
 	self.anchor = nth.I
 
 	return self.popMaturedNode()
@@ -142,11 +143,11 @@ func (self *OPW) aggregateBOPW(index int) *db.Node {
 
 func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	var xrng = []int{nd.Range.I, nd.Range.J}
-	var n = len(self.Cache)
+	var n = len(self.cache)
 	var rest = make([]*pt.Pt, n, n)
 
-	//copy Cache
-	copy(rest, self.Cache)
+	//copy cache
+	copy(rest, self.cache)
 	for _, pnt := range rest {
 		xrng = append(xrng, pnt.I)
 	}
@@ -168,15 +169,11 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	return nd
 }
 
-func (self *OPW) emptyCache() {
-	self.Cache = []*pt.Pt{}
-}
-
 func (self *OPW) cacheAsPoints() []*geom.Point {
-	var n = len(self.Cache)
+	var n = len(self.cache)
 	var coords = make([]*geom.Point, n, n)
 	for i := 0; i < n; i++ {
-		coords[i] = self.Cache[i].Point
+		coords[i] = self.cache[i].Point
 	}
 	return coords
 }
@@ -196,15 +193,4 @@ func NodeGeometry(coordinates []*geom.Point) geom.Geometry {
 		g = coordinates[0].Clone()
 	}
 	return g
-}
-
-func Pop(a []*pt.Pt) (*pt.Pt, []*pt.Pt) {
-	var n int
-	var v *pt.Pt
-	if len(a) == 0 {
-		return nil, a
-	}
-	n = len(a) - 1
-	v, a[n] = a[n], nil
-	return v, a[:n]
 }

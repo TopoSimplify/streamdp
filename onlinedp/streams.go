@@ -125,9 +125,13 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 	var worker = func(hull *db.Node) string {
 		//var hull = v.(*db.Node)
 		if hull.Range.Size() > 1 {
-			var r = rng.NewRange(611, 629)
+			var r = rng.NewRange(607, 629)
 			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
-			if ha.Range.Equals(r) || hb.Range.Equals(r){
+			if hull.Range.Equals(r) {
+				fmt.Println(hull.WTK)
+				fmt.Println(hull.Polyline().Geometry.WKT())
+			}
+			if ha.Range.Equals(r) || hb.Range.Equals(r) {
 				//fid : 235857000
 				fmt.Println("debug")
 				fmt.Println(hull.WTK)
@@ -171,8 +175,7 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 
 func (self *OnlineDP) FindAndCleanUpDeformables() {
 	var query = fmt.Sprintf(
-		`DELETE FROM %v WHERE status=%v;`,
-		self.Src.NodeTable, SplitNode,
+		`DELETE FROM %v WHERE status=%v;`, self.Src.NodeTable, SplitNode,
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {

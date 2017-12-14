@@ -14,7 +14,6 @@ type LnrFeat struct {
 
 //Find and merge simple segments
 func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
-
 	var worker = func(o *LnrFeat) bool {
 		//aggregate src into linear fid and parts
 		self.AggregateSimpleSegments(o.FID, o.Part, fragmentSize)
