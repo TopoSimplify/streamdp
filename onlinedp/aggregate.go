@@ -14,38 +14,27 @@ type LnrFeat struct {
 
 //Find and merge simple segments
 func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
-	var stream = make(chan interface{})
-	var exit = make(chan struct{})
-	defer close(exit)
 
-	go func() {
-		var query = fmt.Sprintf(
-			`SELECT DISTINCT fid, part  FROM %v ORDER BY fid asc, part asc;`,
-			self.Src.NodeTable,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		var fid, part int
-		for h.Next() {
-			h.Scan(&fid, &part)
-			stream <- &LnrFeat{FID: fid, Part: part}
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var o = v.(*LnrFeat)
+	var worker = func(o *LnrFeat) bool {
 		//aggregate src into linear fid and parts
 		self.AggregateSimpleSegments(o.FID, o.Part, fragmentSize)
 		return true
 	}
 
-	var out = fan.Stream(stream, worker, concurProcs, exit)
+	var query = fmt.Sprintf(
+		`SELECT DISTINCT fid, part  FROM %v ORDER BY fid asc, part asc;`,
+		self.Src.NodeTable,
+	)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var fid, part int
 	var bln bool
-	for o := range out {
-		bln = bln && o.(bool)
+	for h.Next() {
+		h.Scan(&fid, &part)
+		o := worker(&LnrFeat{FID: fid, Part: part})
+		bln = bln && o
 	}
 	return bln
 }

@@ -5,7 +5,6 @@ import (
 	"log"
 	"bytes"
 	"simplex/db"
-	"github.com/intdxdt/fan"
 	"github.com/intdxdt/geom"
 )
 
@@ -16,44 +15,33 @@ type Pt struct {
 
 //Find and merge simple segments
 func (self *OnlineDP) SaveSimplification() {
-	var stream = make(chan interface{}, 4*concurProcs)
-	var exit = make(chan struct{})
-	defer close(exit)
-
 	var outputTable = self.Src.Config.Table + "_simple"
 	self.Src.DuplicateTable(outputTable)
 	self.Src.AlterAsMultiLineString(
 		outputTable, self.Src.Config.GeometryColumn, self.Src.SRID,
 	)
 
-	go func() {
-		var query = fmt.Sprintf(
-			`SELECT %v FROM %v;`,
-			self.Src.Config.IdColumn, self.Src.Config.Table,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		var id int
-		for h.Next() {
-			h.Scan(&id)
-			stream <- id
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var id = v.(int)
+	var worker = func(id int) bool {
 		//aggregate src into linear fid and parts
 		self.aggregateNodes(id, outputTable)
 		return true
 	}
 
-	var out = fan.Stream(stream, worker, concurProcs, exit)
-	for range out {
+	var query = fmt.Sprintf(
+		`SELECT %v FROM %v;`,
+		self.Src.Config.IdColumn, self.Src.Config.Table,
+	)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	var id int
+	for h.Next() {
+		h.Scan(&id)
+		worker(id)
+	}
+
 }
 
 func (self *OnlineDP) aggregateNodes(id int, outputTable string) {
@@ -106,9 +94,9 @@ func (self *OnlineDP) aggregateNodes(id int, outputTable string) {
 		} else {
 			curPart = part
 			coordinates = append(coordinates, []*Pt{
-					{pt: o.Coordinates[i], i: o.Range.I},
-					{pt: o.Coordinates[j], i: o.Range.J},
-				})
+				{pt: o.Coordinates[i], i: o.Range.I},
+				{pt: o.Coordinates[j], i: o.Range.J},
+			})
 		}
 	}
 

@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"simplex/db"
 	"simplex/dp"
-	"github.com/intdxdt/fan"
+	"simplex/rng"
 )
 
 func (self *OnlineDP) FindAndMarkDeformables() {
@@ -14,32 +14,12 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
-	var stream = make(chan interface{}, 4*concurProcs)
-	var exit = make(chan struct{})
-	defer close(exit)
+	//var stream = make(chan interface{}, 4*concurProcs)
+	//var exit = make(chan struct{})
+	//defer close(exit)
 
-	go func() {
-		var query = fmt.Sprintf(
-			`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
-			self.Src.NodeTable, NullState,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			log.Panic(err)
-		}
-		var id, fid int
-		var gob string
-		for h.Next() {
-			h.Scan(&id, &fid, &gob)
-			o := db.Deserialize(gob)
-			o.NID, o.FID = id, fid
-			stream <- o
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var hull = v.(*db.Node)
+	var worker = func(hull *db.Node) interface{} {
+		//var hull = v.(*db.Node)
 		// 0. find deformable node
 		var selections = self.selectDeformable(hull)
 		for _, o := range selections {
@@ -47,15 +27,29 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 		}
 		return true
 	}
-	var out = fan.Stream(stream, worker, concurProcs, exit)
-	for range out {
+
+	var query = fmt.Sprintf(
+		`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
+		self.Src.NodeTable, NullState,
+	)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		log.Panic(err)
+	}
+	var id, fid int
+	var gob string
+	for h.Next() {
+		h.Scan(&id, &fid, &gob)
+		o := db.Deserialize(gob)
+		o.NID, o.FID = id, fid
+		worker(o)
 	}
 
 	self.MarkNullState(temp)
 }
 
 func (self *OnlineDP) MarkNullState(temp string) {
-	const  bufferSize = 200
+	const bufferSize = 200
 	var buf = make([]int, 0)
 	var query = fmt.Sprintf(`SELECT id  FROM  %v;`, temp)
 	var h, err = self.Src.Query(query)
@@ -70,7 +64,7 @@ func (self *OnlineDP) MarkNullState(temp string) {
 		buf = append(buf, id)
 		if len(buf) > bufferSize {
 			self.MarkNodesForDeformation(buf)
-			buf = make([]int, 0)//reset
+			buf = make([]int, 0) //reset
 		}
 	}
 
@@ -128,48 +122,44 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 	self.tempCreateTempQueryTable(tempQ)
 	defer self.tempDropTable(tempQ)
 
-	var stream = make(chan interface{})
-	var exit = make(chan struct{})
-	defer close(exit)
-
-	go func() {
-		var query = fmt.Sprintf(
-			`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
-			self.Src.NodeTable, SplitNode,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			panic(err)
-		}
-		var id, fid int
-		var gob string
-		for h.Next() {
-			h.Scan(&id, &fid, &gob)
-			o := db.Deserialize(gob)
-			o.NID, o.FID = id, fid
-			stream <- o
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var hull = v.(*db.Node)
+	var worker = func(hull *db.Node) string {
+		//var hull = v.(*db.Node)
 		if hull.Range.Size() > 1 {
+			var r = rng.NewRange(611, 629)
 			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
+			if ha.Range.Equals(r) || hb.Range.Equals(r){
+				//fid : 235857000
+				fmt.Println("debug")
+				fmt.Println(hull.WTK)
+				fmt.Println(hull.Geometry().WKT())
+				fmt.Println(hull.Polyline().Geometry.WKT())
+			}
 			return ha.InsertSQL(self.Src.NodeTable, self.Src.SRID, hb)
 		}
 		return hull.UpdateSQL(self.Src.NodeTable, NullState)
 	}
 
-	var out = fan.Stream(stream, worker, concurProcs, exit)
-
+	var query = fmt.Sprintf(
+		`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
+		self.Src.NodeTable, SplitNode,
+	)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		panic(err)
+	}
+	var id, fid int
+	var gob string
 	const bufferSize = 100
 	var buf = make([]string, 0)
-	for sel := range out {
-		buf = append(buf, sel.(string))
+	for h.Next() {
+		h.Scan(&id, &fid, &gob)
+		o := db.Deserialize(gob)
+		o.NID, o.FID = id, fid
+		var selStr = worker(o)
+		buf = append(buf, selStr)
 		if len(buf) > bufferSize {
 			self.tempInsertInTOTempQueryTable(tempQ, buf)
-			buf = make([]string, 0)//reset
+			buf = make([]string, 0) //reset
 		}
 	}
 	//flush buf
