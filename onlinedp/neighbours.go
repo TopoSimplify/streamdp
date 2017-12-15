@@ -40,6 +40,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		I:         node.Range.I,
 		J:         node.Range.J,
 		FID:       node.FID,
+		ID:        node.NID,
 		Part:      node.Part,
 		NodeTable: self.Src.NodeTable,
 	})
@@ -56,6 +57,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	var id, fid int
 	var prev, next *db.Node
 
+
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
 		o := db.Deserialize(gob)
@@ -65,6 +67,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		} else if idx == 1 {
 			next = o
 		} else {
+			fmt.Println(query.String())
 			log.Fatalln("expects only two neighbours : prev and next")
 		}
 		idx++

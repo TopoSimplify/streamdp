@@ -10,6 +10,7 @@ import (
 var Port int
 var Host string
 
+
 const DebugMode = 0
 const ReleaseMode = 0
 const Error = 500

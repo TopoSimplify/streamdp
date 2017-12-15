@@ -5,7 +5,6 @@ import (
 	"log"
 	"simplex/db"
 	"simplex/dp"
-	"github.com/intdxdt/fan"
 )
 
 type LnrFeat struct {
@@ -40,35 +39,10 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
 
 //Merge segment fragments where possible
 func (self *OnlineDP) AggregateSimpleSegments(fid, part, fragmentSize int) {
-	var stream = make(chan interface{})
-	var exit = make(chan struct{})
-	defer close(exit)
 
-	go func() {
-		var query = fmt.Sprintf(
-			"SELECT id, fid, gob FROM %v WHERE fid=%v AND part=%v AND size=%v;",
-			self.Src.NodeTable, fid, part, fragmentSize,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			panic(err)
-		}
-		var id, fid int
-		var gob string
-		for h.Next() {
-			h.Scan(&id, &fid, &gob)
-			o := db.Deserialize(gob)
-			o.NID, o.FID = id, fid
-			stream <- o
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var hull = v.(*db.Node)
+	var worker = func(hull *db.Node) []string {
 		// find context neighbours
 		var prev, nxt = self.FindContiguousNodeNeighbours(hull)
-
 		// find mergeable neighbours contiguous
 		var mergePrev, mergeNxt *db.Node
 
@@ -114,14 +88,28 @@ func (self *OnlineDP) AggregateSimpleSegments(fid, part, fragmentSize int) {
 		return queries
 	}
 
-	var out = fan.Stream(stream, worker, concurProcs, exit)
-	for sel := range out {
-		query := sel.([]string)
-		for _, q := range query {
+	var query = fmt.Sprintf(
+		"SELECT id, fid, gob FROM %v WHERE fid=%v AND part=%v AND size=%v;",
+		self.Src.NodeTable, fid, part, fragmentSize,
+	)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		panic(err)
+	}
+	for h.Next() {
+		var gob string
+		var id, fid int
+		h.Scan(&id, &fid, &gob)
+		var o = db.Deserialize(gob)
+		o.NID, o.FID = id, fid
+
+		var queries = worker(o)
+		for _, q := range queries {
 			_, err := self.Src.Exec(q)
 			if err != nil {
 				panic(err)
 			}
 		}
 	}
+
 }

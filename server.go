@@ -98,6 +98,7 @@ func (s *Server) clearHistory(ctx *gin.Context) {
 
 func (s *Server) simplify(ctx *gin.Context) {
 	s.OnlineDP.Simplify()
+	s.SaveSimplification()
 	ctx.JSON(Success, gin.H{"message": "success"})
 }
 
