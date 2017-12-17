@@ -23,28 +23,33 @@ const (
 
 //SimplificationType OPW
 type OPW struct {
-	Id      int
-	Part    int
-	Nodes   DBNodes
-	Options *opts.Opts
-	Score   lnr.ScoreFn
-	cache   Cache
-	Type    OPWType
-
-	anchor int
-	float  int
+	Id            int
+	Part          int
+	Nodes         DBNodes
+	Options       *opts.Opts
+	Score         lnr.ScoreFn
+	Type          OPWType
+	MaxCacheLimit int
+	cache         Cache
+	anchor        int
+	float         int
 }
 
 //Creates a new constrained DP Simplification instance
-func NewOPW(options *opts.Opts, opwType OPWType, offsetScore lnr.ScoreFn) *OPW {
+func NewOPW(options *opts.Opts, opwType OPWType, offsetScore lnr.ScoreFn, maxCacheSize ...int) *OPW {
+	var maxCacheLimit = MaximumCacheLimit
+	if len(maxCacheSize) > 0 {
+		maxCacheLimit = maxCacheSize[0]
+	}
 	var instance = &OPW{
-		Nodes:   make(DBNodes, 0),
-		Options: options,
-		Score:   offsetScore,
-		cache:   make(Cache, 0),
-		Type:    opwType,
-		anchor:  0,
-		float:   -1,
+		Nodes:         make(DBNodes, 0),
+		Options:       options,
+		Score:         offsetScore,
+		Type:          opwType,
+		MaxCacheLimit: maxCacheLimit,
+		cache:         make(Cache, 0),
+		anchor:        0,
+		float:         -1,
 	}
 	return instance
 }
@@ -54,16 +59,21 @@ func (self *OPW) ScoreRelation(val float64) bool {
 }
 
 func (self *OPW) Push(ping *data.Ping) *db.Node {
-	self.float += 1
 	var node *db.Node
 	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
-	self.cache = append(self.cache, &pt.Pt{Point: pnt, Ping: ping, I: self.float})
-	if len(self.cache) < MinimumCacheLimit {
+	var I = 0
+	if self.cache.size() > 0 {
+		I = self.cache.lastIndex() + 1
+	}
+	self.cache.append(&pt.Pt{
+		Point: pnt, Ping: ping, I: I,
+	})
+	if self.cache.size() < MinimumCacheLimit {
 		return node
 	}
 
 	var index, val = offset.OPWMaxOffset(self.cache)
-	if self.ScoreRelation(val) || (len(self.cache) >= MaximumCacheLimit) {
+	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {
@@ -76,16 +86,13 @@ func (self *OPW) Push(ping *data.Ping) *db.Node {
 }
 
 func (self *OPW) Done() []*db.Node {
-	var nd *db.Node
+	self.updateFloatAnchor()
 	if (self.Type == NOPW) && !self.cache.isEmpty() && !self.Nodes.IsEmpty() {
-		nd = self.drainCache(self.Nodes.Pop())
-		self.Nodes.Append(nd)
+		self.Nodes.Append(self.drainCache(self.Nodes.Pop()))
 	} else if (self.Type == BOPW) && !self.cache.isEmpty() && !self.Nodes.IsEmpty() {
-		nd = self.drainCache(self.Nodes.Pop())
-		self.Nodes.Append(nd)
+		self.Nodes.Append(self.drainCache(self.Nodes.Pop()))
 	} else if self.cache.size() > 1 && self.Nodes.IsEmpty() {
-		nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
-		self.Nodes.Append(nd)
+		self.Nodes.Append(self.createNode())
 	}
 	return self.Nodes.AsSlice()
 }
@@ -98,79 +105,60 @@ func (self *OPW) popMaturedNode() *db.Node {
 	return node
 }
 
-func (self *OPW) floatAnchor() (int, int) {
-	return self.cache.first().I, self.cache.last().I
+func (self *OPW) updateFloatAnchor() {
+	if self.cache.size() > 0 {
+		self.anchor = self.cache.firstIndex()
+		self.float = self.cache.lastIndex()
+	}
 }
 
 func (self *OPW) aggregateNOPW(index int) *db.Node {
-	var n int
-	var stash = self.cache[index+1:]
-	n = len(stash)
-	stash = stash[:n:n]
+	var stash Cache
+	self.cache, stash = self.cache.split(index) //update cache
+	self.updateFloatAnchor()                    //update float , anchor
 
-	//restrict from 0 to index
-	self.cache = self.cache[:index+1]
-	n = len(self.cache)
-	self.cache = self.cache[:n:n]
-
-	self.anchor, self.float = self.floatAnchor()
-	var nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
-
-	self.Nodes.Append(nd)
+	self.Nodes.Append(self.createNode())
 
 	var nth = self.cache.last()
 	self.cache.empty().append(nth).append(stash...)
-	self.anchor, self.float = self.floatAnchor()
+	self.updateFloatAnchor()
 
 	return self.popMaturedNode()
 }
 
 func (self *OPW) aggregateBOPW(index int) *db.Node {
-	var last = self.cache.pop()                  //pop float
-	self.anchor, self.float = self.floatAnchor() //update: anchor, float
-
-	//create node
-	var nd = self.createNode(self.cacheAsPoints(), self.anchor, self.float)
-
-	self.Nodes.Append(nd)
+	var flt = self.cache.pop() //pop float
+	self.updateFloatAnchor()   //update: anchor, float
+	self.Nodes.Append(self.createNode())
 
 	var nth = self.cache.last()
-	self.cache.empty().append(nth).append(last)
-	self.anchor = nth.I
+	self.cache.empty().append(nth, flt)
+	self.updateFloatAnchor()
 
 	return self.popMaturedNode()
 }
 
 func (self *OPW) drainCache(nd *db.Node) *db.Node {
-	var xrng = []int{nd.Range.I, nd.Range.J}
-	var n = len(self.cache)
-	var rest = make([]*pt.Pt, n, n)
-
-	//copy cache
-	copy(rest, self.cache)
-	for _, pnt := range rest {
-		xrng = append(xrng, pnt.I)
+	var xrng = []int{
+		nd.Range.I, nd.Range.J, self.cache.first().I, self.cache.last().I,
 	}
 	sort.Ints(xrng)
 
-	//copy node coordinates
-	var cache = make([]*geom.Point, len(nd.Polyline().Coordinates))
-	copy(cache, nd.Polyline().Coordinates)
+	var i, j = nd.Range.I, self.cache.lastIndex()
 
+	//copy node coordinates
+	var cache = self.nodeAsPoints(nd)
 	//add rest to node coords
-	for _, pnt := range rest {
+	for _, pnt := range self.cache[1:] {
 		cache = append(cache, pnt.Point)
 	}
 
-	//new range
-	var r = rng.NewRange(xrng[0], xrng[len(xrng)-1])
 	//new node
-	nd = db.New(cache, r, self.Id, self.Part, NodeGeometry)
-	return nd
+	return db.New(cache, rng.NewRange(i, j), self.Id, self.Part, NodeGeometry)
 }
 
 func (self *OPW) cacheAsPoints() []*geom.Point {
-	var n = len(self.cache)
+	var n = self.cache.size()
 	var coords = make([]*geom.Point, n, n)
 	for i := 0; i < n; i++ {
 		coords[i] = self.cache[i].Point
@@ -178,8 +166,19 @@ func (self *OPW) cacheAsPoints() []*geom.Point {
 	return coords
 }
 
-func (self *OPW) createNode(coords []*geom.Point, i, j int) *db.Node {
-	return db.New(coords, rng.NewRange(i, j), self.Id, self.Part, NodeGeometry)
+func (self *OPW) nodeAsPoints(nd *db.Node) []*geom.Point {
+	var lnrcoords = nd.Polyline().Coordinates
+	var coords = make([]*geom.Point, len(lnrcoords))
+	copy(coords, lnrcoords)
+	return coords
+}
+
+func (self *OPW) createNode() *db.Node {
+	return db.New(
+		self.cacheAsPoints(),
+		rng.NewRange(self.anchor, self.float),
+		self.Id, self.Part, NodeGeometry,
+	)
 }
 
 //hull geom

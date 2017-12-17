@@ -1,6 +1,8 @@
 package main
 
-import "simplex/streamdp/pt"
+import (
+	"simplex/streamdp/pt"
+)
 
 type Cache []*pt.Pt
 
@@ -10,6 +12,14 @@ func (self *Cache) first() *pt.Pt {
 
 func (self *Cache) last() *pt.Pt {
 	return (*self)[self.size()-1]
+}
+
+func (self *Cache) firstIndex() int {
+	return self.first().I
+}
+
+func (self *Cache) lastIndex() int {
+	return self.last().I
 }
 
 func (self *Cache) size() int {
@@ -23,6 +33,26 @@ func (self *Cache) isEmpty() bool {
 func (self *Cache) empty() *Cache {
 	*self = make(Cache, 0)
 	return self
+}
+
+func (self *Cache) clone() Cache {
+	var list = *self
+	var clone = make(Cache, 0, self.size())
+	clone.append(list...)
+	return clone
+}
+
+func (self *Cache) split(index int) (Cache, Cache) {
+	var list = *self
+	var before, after = make(Cache, 0), make(Cache, 0)
+	for i := range list {
+		if i <= index {
+			before.append(list[i])
+		} else if i > index {
+			after.append(list[i])
+		}
+	}
+	return before, after
 }
 
 func (self *Cache) append(pts ...*pt.Pt) *Cache {

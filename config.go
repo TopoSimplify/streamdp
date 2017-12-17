@@ -3,8 +3,8 @@ package main
 import (
 	"simplex/db"
 	"simplex/opts"
-	"github.com/intdxdt/fileutil"
 	"github.com/naoina/toml"
+	"github.com/intdxdt/fileutil"
 )
 
 type ServerConfig struct {

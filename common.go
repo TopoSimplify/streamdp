@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"time"
+	"math/rand"
 	"simplex/ctx"
 	"simplex/node"
 	"path/filepath"
@@ -9,8 +11,6 @@ import (
 	"github.com/intdxdt/math"
 	"github.com/intdxdt/rtree"
 	"github.com/intdxdt/deque"
-	"math/rand"
-	"time"
 )
 const GeomColumn    = "geom"
 const IdColumn      = "id"

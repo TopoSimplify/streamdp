@@ -1,9 +1,9 @@
 package offset
 
 import (
+	"simplex/rng"
 	"simplex/streamdp/pt"
 	"github.com/intdxdt/geom"
-	"simplex/rng"
 	"github.com/intdxdt/vect"
 )
 

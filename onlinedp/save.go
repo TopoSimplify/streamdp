@@ -24,7 +24,8 @@ var onlineOutputTemplate *template.Template
 
 func init() {
 	var err error
-	onlineOutputTemplate, err = template.New("online_output_table").Parse(onlineOutputTblTemplate)
+	onlineOutputTemplate, err = template.New(
+		"online_output_table").Parse(onlineOutputTblTemplate)
 	if err != nil {
 		log.Panic(err)
 	}

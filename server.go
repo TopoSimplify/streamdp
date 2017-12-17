@@ -84,7 +84,6 @@ func (s *Server) init() {
 		offset.MaxOffset, true,
 	)
 
-
 	//create online table
 	if err := s.initCreateOnlineTable(); err != nil {
 		log.Fatalln(err)
@@ -98,7 +97,6 @@ func (s *Server) clearHistory(ctx *gin.Context) {
 
 func (s *Server) simplify(ctx *gin.Context) {
 	s.OnlineDP.Simplify()
-	s.SaveSimplification()
 	ctx.JSON(Success, gin.H{"message": "success"})
 }
 
