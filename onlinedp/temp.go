@@ -88,8 +88,8 @@ func (self *OnlineDP) tempExecuteQueries(tempQ string) {
 	}
 
 	const bufferSize = 100
-	var buf = make([]string, 0)
 	var q string
+	var buf = make([]string, 0)
 	for h.Next() {
 		h.Scan(&q)
 		buf = append(buf, decode64(q))

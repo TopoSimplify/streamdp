@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"simplex/db"
 	"simplex/dp"
-	"simplex/rng"
 )
 
 func (self *OnlineDP) FindAndMarkDeformables() {
@@ -14,12 +13,7 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
-	//var stream = make(chan interface{}, 4*concurProcs)
-	//var exit = make(chan struct{})
-	//defer close(exit)
-
-	var worker = func(hull *db.Node) interface{} {
-		//var hull = v.(*db.Node)
+	var worker = func(hull *db.Node) bool {
 		// 0. find deformable node
 		var selections = self.selectDeformable(hull)
 		for _, o := range selections {
@@ -30,17 +24,17 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 
 	var query = fmt.Sprintf(
 		`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
-		self.Src.NodeTable, NullState,
-	)
+		self.Src.NodeTable, NullState)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+
 	var id, fid int
 	var gob string
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
-		o := db.Deserialize(gob)
+		var o = db.Deserialize(gob)
 		o.NID, o.FID = id, fid
 		worker(o)
 	}
@@ -123,21 +117,8 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 	defer self.tempDropTable(tempQ)
 
 	var worker = func(hull *db.Node) string {
-		//var hull = v.(*db.Node)
 		if hull.Range.Size() > 1 {
-			var r = rng.NewRange(607, 629)
 			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
-			if hull.Range.Equals(r) {
-				fmt.Println(hull.WTK)
-				fmt.Println(hull.Polyline().Geometry.WKT())
-			}
-			if ha.Range.Equals(r) || hb.Range.Equals(r) {
-				//fid : 235857000
-				fmt.Println("debug")
-				fmt.Println(hull.WTK)
-				fmt.Println(hull.Geometry().WKT())
-				fmt.Println(hull.Polyline().Geometry.WKT())
-			}
 			return ha.InsertSQL(self.Src.NodeTable, self.Src.SRID, hb)
 		}
 		return hull.UpdateSQL(self.Src.NodeTable, NullState)
@@ -153,12 +134,14 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 	}
 	var id, fid int
 	var gob string
-	const bufferSize = 100
+	var bufferSize = 100
 	var buf = make([]string, 0)
+
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
-		o := db.Deserialize(gob)
+		var o = db.Deserialize(gob)
 		o.NID, o.FID = id, fid
+
 		var selStr = worker(o)
 		buf = append(buf, selStr)
 		if len(buf) > bufferSize {
@@ -166,6 +149,7 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 			buf = make([]string, 0) //reset
 		}
 	}
+
 	//flush buf
 	if len(buf) > 0 {
 		self.tempInsertInTOTempQueryTable(tempQ, buf)

@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"log"
 	"bytes"
-	"runtime"
 	"simplex/db"
 	"text/template"
 	"simplex/streamdp/pt"
-	"github.com/intdxdt/fan"
 	"github.com/intdxdt/geom"
 )
 
@@ -36,10 +34,6 @@ func init() {
 
 //Find and merge simple segments
 func (self *OnlineDP) SaveSimplification() {
-	var stream = make(chan interface{})
-	var exit = make(chan struct{})
-	defer close(exit)
-
 	var query bytes.Buffer
 	self.Src.NodeTable = fmt.Sprintf(`%v_simple`, self.Src.Config.Table)
 	if err := onlineOutputTemplate.Execute(&query, self.Src); err != nil {
@@ -56,33 +50,26 @@ func (self *OnlineDP) SaveSimplification() {
 		outputTable, self.Src.Config.GeometryColumn, self.Src.SRID,
 	)
 
-	go func() {
-		var query = fmt.Sprintf(
-			`SELECT DISTINCT %v FROM %v;`, "fid", self.Src.Config.Table,
-		)
-		var h, err = self.Src.Query(query)
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		var id int
-		for h.Next() {
-			h.Scan(&id)
-			stream <- id
-		}
-		close(stream)
-	}()
-
-	var worker = func(v interface{}) interface{} {
-		var id = v.(int)
+	var worker = func(id int) bool {
 		//aggregate src into linear fid and parts
 		self.aggregateNodes(id, outputTable)
 		return true
 	}
 
-	var out = fan.Stream(stream, worker, runtime.NumCPU(), exit)
-	for range out {
+	var queryStream = fmt.Sprintf(
+		`SELECT DISTINCT %v FROM %v;`, "fid", self.Src.Config.Table,
+	)
+	var h, err = self.Src.Query(queryStream)
+	if err != nil {
+		log.Fatalln(err)
 	}
+
+	var id int
+	for h.Next() {
+		h.Scan(&id)
+		worker(id)
+	}
+
 }
 
 func (self *OnlineDP) aggregateNodes(id int, outputTable string) {

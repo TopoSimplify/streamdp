@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS {{.Table}} (
     gob TEXT NOT NULL,
     geom GEOMETRY(Geometry, {{.SRID}}) NOT NULL,
     status INT DEFAULT 0,
-    CONSTRAINT pid_{{.Table}} PRIMARY KEY (id)
+    CONSTRAINT pid_{{.Table}} PRIMARY KEY (id),
+	CONSTRAINT u_constraint UNIQUE (fid, i, j)
 ) WITH (OIDS=FALSE);
 CREATE INDEX idx_i_{{.Table}} ON {{.Table}} (i);
 CREATE INDEX idx_j_{{.Table}} ON {{.Table}} (j);

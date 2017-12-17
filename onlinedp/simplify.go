@@ -12,9 +12,9 @@ func (self *OnlineDP) Simplify() {
 		// 4.remove deformable nodes
 		self.FindAndCleanUpDeformables()
 	}
-	//self.FindAndProcessSimpleSegments(MergeFragmentSize)
+	self.FindAndProcessSimpleSegments(MergeFragmentSize)
 	//save simplification
 	self.SaveSimplification()
 	//drop node table
-	//self.Src.DeleteTable(self.Src.NodeTable)
+	self.Src.DeleteTable(self.Src.NodeTable)
 }
