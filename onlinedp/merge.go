@@ -15,6 +15,7 @@ func (self *OnlineDP) ContiguousFragmentsAtThreshold(
 		panic("node are not contiguous")
 	}
 	var coordinates = ContiguousCoordinates(ha, hb)
+
 	_, val := scoreFn(coordinates)
 	if self.ScoreRelation(val) {
 		return contiguousFragments(coordinates, ha, hb, gfn)

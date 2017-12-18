@@ -50,14 +50,14 @@ func (self *OnlineDP) SaveSimplification() {
 		outputTable, self.Src.Config.GeometryColumn, self.Src.SRID,
 	)
 
+	//aggregate src into linear fid and parts
 	var worker = func(id int) bool {
-		//aggregate src into linear fid and parts
 		self.aggregateNodes(id, outputTable)
 		return true
 	}
 
 	var queryStream = fmt.Sprintf(
-		`SELECT DISTINCT %v FROM %v;`, "fid", self.Src.Config.Table,
+		`SELECT DISTINCT %v FROM %v;`, `fid`, self.Src.Config.Table,
 	)
 	var h, err = self.Src.Query(queryStream)
 	if err != nil {
@@ -74,8 +74,11 @@ func (self *OnlineDP) SaveSimplification() {
 
 func (self *OnlineDP) aggregateNodes(id int, outputTable string) {
 	var query = fmt.Sprintf(`
-		SELECT fid, part, gob FROM %v WHERE fid=%v ORDER BY fid asc, part asc, i asc;`,
-		self.Src.Config.Table, id,
+		SELECT fid, part, gob
+		FROM %v
+		WHERE fid=%v
+		ORDER BY fid asc, part asc, i asc;
+	`, self.Src.Config.Table, id,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -86,32 +89,33 @@ func (self *OnlineDP) aggregateNodes(id int, outputTable string) {
 	var fid, part int
 	var coordinates = make([][]*pt.Pt, 0)
 
-	var idx = -1
+	var index = -1
 	var curPart = -1
 	for h.Next() {
 		h.Scan(&fid, &part, &gob)
 		var o = db.Deserialize(gob)
 		var i, j = 0, len(o.Coordinates)-1
 
-		if idx == -1 {
+		if index == -1 {
 			curPart = part
 			coordinates = append(coordinates, []*pt.Pt{})
 		}
 
-		idx = len(coordinates) - 1
+		index = len(coordinates) - 1
 		if curPart == part {
 			var last *pt.Pt
-			if len(coordinates[idx]) > 0 {
-				n := len(coordinates[idx]) - 1
-				last = coordinates[idx][n]
+			if len(coordinates[index]) > 0 {
+				n := len(coordinates[index]) - 1
+				last = coordinates[index][n]
 			}
+
 			if last == nil {
-				coordinates[idx] = append(coordinates[idx],
+				coordinates[index] = append(coordinates[index],
 					&pt.Pt{Point: o.Coordinates[i], I: o.Range.I},
 					&pt.Pt{Point: o.Coordinates[j], I: o.Range.J},
 				)
 			} else if last.I == o.Range.I {
-				coordinates[idx] = append(coordinates[idx],
+				coordinates[index] = append(coordinates[index],
 					&pt.Pt{Point: o.Coordinates[j], I: o.Range.J},
 				)
 			} else {
