@@ -11,14 +11,10 @@ import (
 type LnrFeat struct {
 	FID, Part int
 }
-type mergeHistory struct {
-	queries []string
-	dict    map[[2]int]bool
-}
+
 
 //Find and merge simple segments
 func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
-
 	//aggregate src into linear fid and parts
 	var worker = func(fid, part int) bool {
 		self.AggregateSimpleSegments(fid, part, fragmentSize)
@@ -31,7 +27,7 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 
 	var fid, part int

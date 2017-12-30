@@ -174,7 +174,7 @@ func (self *OnlineDP) HasMoreDeformables() bool {
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 	var bln = false
 	for h.Next() {

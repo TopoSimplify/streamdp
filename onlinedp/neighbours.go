@@ -45,11 +45,11 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		NodeTable: self.Src.NodeTable,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 	h, err := self.Src.Query(query.String())
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 
 	var idx = 0
@@ -57,23 +57,21 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	var id, fid int
 	var prev, next *db.Node
 
-
+	var nodes = make([]*db.Node, 0)
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
 		o := db.Deserialize(gob)
 		o.NID, o.FID = id, fid
-		if idx == 0 {
-			prev = o
-		} else if idx == 1 {
-			next = o
+		if idx == 0 || idx == 1 {
+			nodes = append(nodes, o)
 		} else {
 			fmt.Println(query.String())
-			log.Fatalln("expects only two neighbours : prev and next")
+			log.Panic("expects only two neighbours : prev and next")
 		}
 		idx++
 	}
+	prev, next = Neighbours(node, nodes)
 	return prev, next
-
 }
 
 func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...*rng.Range) []*db.Node {
@@ -94,7 +92,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 
 	var id, fid int

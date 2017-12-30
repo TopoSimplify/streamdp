@@ -11,7 +11,7 @@ func (self *OnlineDP) ValidateMerge(hull *db.Node, excludeRanges ...*rng.Range) 
 
 	// self intersection constraint
 	if self.Options.AvoidNewSelfIntersects {
-		bln = self.BySelfIntersection(self.Options, hull, &sideEffects, excludeRanges...)
+		bln = self.SelectBySelfIntersection(self.Options, hull, &sideEffects, excludeRanges...)
 	}
 
 	if len(sideEffects) != 0 || !bln {

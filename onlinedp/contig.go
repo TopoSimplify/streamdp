@@ -40,3 +40,23 @@ func IsContiguous(a, b *db.Node) (bool, bool, int) {
 
 	return bln, contig, interCount
 }
+
+
+//Find neibours of node (prev , next)
+func Neighbours(hull *db.Node, neighbs []*db.Node) (*db.Node, *db.Node) {
+	var prev, nxt *db.Node
+	var i, j = hull.Range.I, hull.Range.J
+	for _, h := range neighbs {
+		if h != hull {
+			if i == h.Range.J {
+				prev = h
+			} else if j == h.Range.I {
+				nxt = h
+			}
+		}
+		if prev != nil && nxt != nil {
+			break
+		}
+	}
+	return prev, nxt
+}

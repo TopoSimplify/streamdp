@@ -6,12 +6,12 @@ import (
 	"strings"
 	"simplex/db"
 	"database/sql"
+	"path/filepath"
 	_ "github.com/lib/pq"
 	"simplex/streamdp/data"
 	"gopkg.in/gin-gonic/gin.v1"
 	"simplex/streamdp/onlinedp"
 	"simplex/streamdp/offset"
-	"path/filepath"
 )
 
 func NewServer(address string, mode int) *Server {

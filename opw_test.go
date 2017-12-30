@@ -3,11 +3,11 @@ package main
 import (
 	"time"
 	"testing"
-	"simplex/streamdp/data"
-	"github.com/franela/goblin"
-	"simplex/opts"
-	"simplex/streamdp/offset"
 	"simplex/db"
+	"simplex/opts"
+	"simplex/streamdp/data"
+	"simplex/streamdp/offset"
+	"github.com/franela/goblin"
 )
 
 func generatePings(size int) []*data.Ping {
@@ -66,6 +66,5 @@ func TestOPW(t *testing.T) {
 			nodes = buildNodes(pts, inst)
 			g.Assert(len(nodes)).Equal(10)
 		})
-
 	})
 }

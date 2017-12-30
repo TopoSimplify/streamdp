@@ -57,6 +57,7 @@ func main() {
 		NodeTable: serverCfg.Table,
 	}
 	initCreateOnlineTable(src, serverCfg)
+
 	//clear history
 	runProcess(ClearHistoryAddress)
 	//vessel pings

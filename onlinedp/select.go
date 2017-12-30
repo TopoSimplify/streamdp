@@ -2,8 +2,70 @@ package onlinedp
 
 import (
 	"simplex/db"
+	"github.com/intdxdt/geom"
+	"simplex/opts"
+	"simplex/rng"
 )
 
+func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
+	var selections = make([]*db.Node, 0)
+	//if hull is segment
+	if hull.Range.Size() == 1 {
+		return selections
+	}
+	//collinear: hull is line
+	if hull.HullType == geom.GeoType_LineString {
+		return selections
+	}
+
+	// find hull neighbours
+	var neighbs = self.FindNodeNeighbours(hull, self.Independent)
+
+	// self intersection constraint
+	// can self intersect with itself but not with other lines
+	self.ByFeatureClassIntersection(hull, neighbs, &selections)
+
+	// context_geom geometry constraint
+	self.ValidateContextRelation(hull, &selections)
+	return selections
+
+}
+
+//Constrain for self-intersection as a result of simplification
+//returns boolean : is hull collapsible
+func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node, selections *[]*db.Node, excludeRanges ...*rng.Range) bool {
+	//assume hull is valid and proof otherwise
+	var bln = true
+	// find hull neighbours
+	var neighbs = self.FindNodeNeighbours(hull, self.Independent, excludeRanges...)
+
+	var hulls = self.SelectFeatureClass(hull, neighbs)
+	for _, h := range hulls {
+		//if bln & selection contains current hull : bln : false
+		if bln && (h == hull) {
+			bln = false //cmp &
+		}
+		*selections = append(*selections, h)
+	}
+
+	return bln
+}
+
+//Constrain for self-intersection as a result of simplification
+func (self *OnlineDP) ByFeatureClassIntersection(hull *db.Node, neighbs []*db.Node, selections *[]*db.Node) bool {
+	var bln = true
+
+	//find hull neighbours
+	var hulls = self.SelectFeatureClass(hull, neighbs)
+	for _, h := range hulls {
+		//if bln & selection contains current hull : bln : false
+		if bln && (h == hull) {
+			bln = false // cmp ref
+		}
+		*selections = append(*selections, h)
+	}
+	return bln
+}
 //find context_geom deformable hulls
 func (self *OnlineDP) SelectFeatureClass(hull *db.Node, ctxHulls []*db.Node) []*db.Node {
 	var n int
