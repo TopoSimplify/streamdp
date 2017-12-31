@@ -1,6 +1,7 @@
 package onlinedp
 
 import (
+	"log"
 	"simplex/db"
 	"simplex/rng"
 	"simplex/common"
@@ -12,7 +13,7 @@ func (self *OnlineDP) ContiguousFragmentsAtThreshold(
 	scoreFn ScoreFn, ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
 
 	if !ha.Range.Contiguous(hb.Range) {
-		panic("node are not contiguous")
+		log.Panic("node are not contiguous")
 	}
 	var coordinates = ContiguousCoordinates(ha, hb)
 
@@ -34,6 +35,11 @@ func ContiguousCoordinates(prev, next *db.Node) []*geom.Point {
 	if !prev.Range.Contiguous(next.Range) {
 		panic("node are not contiguous")
 	}
+
+	if next.Range.I < prev.Range.J && next.Range.J == prev.Range.I {
+		prev, next = next, prev
+	}
+
 	var coordinates = prev.Coordinates
 	var n = len(coordinates) - 1
 	coordinates = append(coordinates[:n:n], next.Coordinates...)

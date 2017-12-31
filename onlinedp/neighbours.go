@@ -24,6 +24,7 @@ var neighbTpl = `
 	WHERE fid={{.FID}} AND part={{.Part}} AND (j={{.I}} OR i={{.J}}) AND id <> {{.ID}}
 	ORDER BY i;
 `
+
 var neighbTemplate *template.Template
 
 func init() {
@@ -57,7 +58,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	var id, fid int
 	var prev, next *db.Node
 
-	var nodes = make([]*db.Node, 0)
+	var nodes []*db.Node
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
 		o := db.Deserialize(gob)

@@ -1,16 +1,16 @@
 package onlinedp
 
 import (
-	"time"
-	"testing"
-	"github.com/franela/goblin"
-	"database/sql"
 	"fmt"
+	"time"
+	"sort"
+	"testing"
+	"simplex/db"
+	"simplex/rng"
+	"database/sql"
 	"simplex/opts"
 	"simplex/streamdp/offset"
-	"simplex/db"
-	"sort"
-	"simplex/rng"
+	"github.com/franela/goblin"
 )
 
 func TestOnline(t *testing.T) {
@@ -24,7 +24,7 @@ func TestOnline(t *testing.T) {
 				{14, 15}, {15, 16}, {16, 17}, {17, 18},
 				{18, 19}, {19, len(coords) - 1}}
 			var hulls = createNodes(intRanges, coords)
-			printNodes(hulls)
+			//printNodes(hulls)
 
 			//var options = &opts.Opts{MinDist: 10}
 			var serverCfg = loadConfig(ServerCfg)
@@ -126,13 +126,6 @@ func TestOnline(t *testing.T) {
 
 			inst.FindAndProcessSimpleSegments(1)
 			inst.FindAndProcessSimpleSegments(2)
-			inst.FindAndProcessSimpleSegments(3)
-			inst.FindAndProcessSimpleSegments(4)
-			inst.FindAndProcessSimpleSegments(5)
-			inst.FindAndProcessSimpleSegments(6)
-			//for i := 0; i < 2; i++ {
-			//	log.Println(fmt.Sprintf("merging simple fragments:%v ... #%v", MergeFragmentSize, i))
-			//}
 		})
 	})
 }

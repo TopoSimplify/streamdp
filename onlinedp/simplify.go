@@ -1,10 +1,5 @@
 package onlinedp
 
-import (
-	"log"
-	"fmt"
-)
-
 func (self *OnlineDP) Simplify() {
 	// 0.while has more deformables : loop
 	for self.HasMoreDeformables() {
@@ -17,21 +12,7 @@ func (self *OnlineDP) Simplify() {
 		// 4.remove deformable nodes
 		self.FindAndCleanUpDeformables()
 	}
-
-	for i := 0; i < 2; i++ {
-		log.Println(fmt.Sprintf("merging simple fragments:%v ... #%v", MergeFragmentSize, i))
-		self.FindAndProcessSimpleSegments(MergeFragmentSize)
-	}
-
-	for i := 0; i < 2; i++ {
-		log.Println(fmt.Sprintf("merging simple fragments:%v ... #%v", 2, i))
-		self.FindAndProcessSimpleSegments(2)
-	}
-
-	for i := 0; i < 2; i++ {
-		log.Println(fmt.Sprintf("merging simple fragments:%v ... #%v", 3, i))
-		self.FindAndProcessSimpleSegments(3)
-	}
+	self.FindAndProcessSimpleSegments(MergeFragmentSize)
 	//save simplification
 	self.SaveSimplification()
 	//drop node table

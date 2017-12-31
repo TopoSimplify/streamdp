@@ -22,19 +22,18 @@ func (self *OnlineDP) FindAndMarkDeformables() {
 		return true
 	}
 
-	var query = fmt.Sprintf(
-		`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
+	var query = fmt.Sprintf(`SELECT id, fid, gob  FROM  %v WHERE status=%v`,
 		self.Src.NodeTable, NullState)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	var id, fid int
-	var gob string
 	for h.Next() {
+		var gob string
+		var id, fid int
 		h.Scan(&id, &fid, &gob)
-		var o = db.Deserialize(gob)
+		o := db.Deserialize(gob)
 		o.NID, o.FID = id, fid
 		worker(o)
 	}
@@ -124,14 +123,12 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 		return hull.UpdateSQL(self.Src.NodeTable, NullState)
 	}
 
-	var query = fmt.Sprintf(
-		`SELECT id, fid, gob  FROM  %v WHERE status=%v;`,
-		self.Src.NodeTable, SplitNode,
-	)
+	var query = fmt.Sprintf(`SELECT id, fid, gob  FROM  %v WHERE status=%v;`, self.Src.NodeTable, SplitNode)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
+
 	var id, fid int
 	var gob string
 	var bufferSize = 100
@@ -139,10 +136,10 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 
 	for h.Next() {
 		h.Scan(&id, &fid, &gob)
-		var o = db.Deserialize(gob)
+		o := db.Deserialize(gob)
 		o.NID, o.FID = id, fid
 
-		var selStr = worker(o)
+		selStr := worker(o)
 		buf = append(buf, selStr)
 		if len(buf) > bufferSize {
 			self.tempInsertInTOTempQueryTable(tempQ, buf)
@@ -163,15 +160,12 @@ func (self *OnlineDP) FindAndCleanUpDeformables() {
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
 }
 
 func (self *OnlineDP) HasMoreDeformables() bool {
-	var query = fmt.Sprintf(
-		`SELECT id FROM %v WHERE status=%v LIMIT 1;`,
-		self.Src.NodeTable, NullState,
-	)
+	var query = fmt.Sprintf(`SELECT id FROM %v WHERE status=%v LIMIT 1;`, self.Src.NodeTable, NullState)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)

@@ -12,7 +12,6 @@ type LnrFeat struct {
 	FID, Part int
 }
 
-
 //Find and merge simple segments
 func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
 	//aggregate src into linear fid and parts
@@ -42,7 +41,7 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
 
 //Merge segment fragments where possible
 func (self *OnlineDP) AggregateSimpleSegments(fid, part, fragmentSize int) {
-	var temp = self.tempNodeIDTableName() + fmt.Sprintf("_%v", fid)
+	var temp = self.tempNodeIDTableName() + fmt.Sprintf("_%v_%v", fid, part)
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
@@ -62,7 +61,7 @@ func (self *OnlineDP) processNodeFragment(nid int) {
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	for h.Next() {
 		var gob string
@@ -73,55 +72,47 @@ func (self *OnlineDP) processNodeFragment(nid int) {
 
 		var queries = self.fragmentMerger(o)
 		for _, q := range queries {
-			fmt.Println(q)
+			//fmt.Println(q)
 			if _, err := self.Src.Exec(q); err != nil {
-				panic(err)
+				log.Panic(err)
 			}
 		}
 	}
 }
 
 func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
-	// find context neighbours
-	var prev, nxt = self.FindContiguousNodeNeighbours(hull)
-
-	// find mergeable neighbours contiguous
-	var mergePrev, mergeNxt *db.Node
-
-	if prev != nil {
-		mergePrev = self.ContiguousFragmentsAtThreshold(
-			self.Score, prev, hull, dp.NodeGeometry,
-		)
-	}
-
-	if nxt != nil {
-		mergeNxt = self.ContiguousFragmentsAtThreshold(
-			self.Score, hull, nxt, dp.NodeGeometry,
-		)
-	}
-
-	var merged bool
 	var queries []string
-	//nxt, prev
-	if !merged && mergeNxt != nil {
-		if self.ValidateMerge(mergeNxt, hull.Range, nxt.Range) {
-			queries = append(queries,
-				nxt.DeleteSQL(self.Src.NodeTable),
-				mergeNxt.InsertSQL(self.Src.NodeTable, self.Src.SRID),
-			)
-			merged = true
+	var ma, mb *db.Node //mergeable neighbours
+
+	// find context neighbours, swap a, b to favor b (next)
+	var nb, na = self.FindContiguousNodeNeighbours(hull)
+
+	//if na is bigger, swap na and nb
+	if na != nil && nb != nil {
+		if na.Range.Size() > nb.Range.Size() {
+			na, nb = nb, na
 		}
 	}
 
-	if !merged && mergePrev != nil {
-		//prev cannot exist since moving from left --- right
-		if self.ValidateMerge(mergePrev, hull.Range, prev.Range) {
-			queries = append(queries,
-				prev.DeleteSQL(self.Src.NodeTable),
-				mergePrev.InsertSQL(self.Src.NodeTable, self.Src.SRID),
-			)
-			merged = true
-		}
+	if na != nil {
+		ma = self.ContiguousFragmentsAtThreshold(
+			self.Score, hull, na, dp.NodeGeometry,
+		)
+	}
+
+	if nb != nil {
+		mb = self.ContiguousFragmentsAtThreshold(
+			self.Score, hull, nb, dp.NodeGeometry,
+		)
+	}
+
+	var merged = false
+	if ma != nil {
+		merged = self.checkMerge(ma, hull, na, &queries)
+	}
+
+	if !merged && mb != nil {
+		merged = self.checkMerge(mb, hull, nb, &queries)
 	}
 
 	if merged {
@@ -129,6 +120,18 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 	}
 
 	return queries
+}
+
+func (self *OnlineDP) checkMerge(merge, hull, neighb *db.Node, queries *[]string) bool {
+	var merged = false
+	if self.ValidateMerge(merge, hull.Range, neighb.Range) {
+		*queries = append(*queries,
+			neighb.DeleteSQL(self.Src.NodeTable),
+			merge.InsertSQL(self.Src.NodeTable, self.Src.SRID),
+		)
+		merged = true
+	}
+	return merged
 }
 
 func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid, part, fragmentSize int, temp string) {

@@ -38,10 +38,7 @@ func NewServer(address string, mode int) *Server {
 		Dim:       server.Config.Dim,
 		NodeTable: server.Config.Table,
 	}
-	server.ConstSrc = db.NewDataSrc(
-		filepath.Join(pwd, "consts.toml"),
-	)
-
+	server.ConstSrc = db.NewDataSrc(filepath.Join(pwd, "consts.toml"))
 	return server
 }
 
