@@ -5,23 +5,23 @@ import (
 	"testing"
 	"simplex/db"
 	"simplex/opts"
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 	"simplex/streamdp/offset"
 	"github.com/franela/goblin"
 )
 
-func generatePings(size int) []*data.Ping {
+func generatePings(size int) []*mtrafic.Ping {
 	var t = time.Now()
-	var pts = make([]*data.Ping, 0)
+	var pts = make([]*mtrafic.Ping, 0)
 	for i := 0; i < size; i++ {
 		v := float64(i)
 		t = t.Add(1 * time.Second)
-		pts = append(pts, &data.Ping{X: v, Y: 0, Time: t})
+		pts = append(pts, &mtrafic.Ping{X: v, Y: 0, Time: t})
 	}
 	return pts
 }
 
-func buildNodes(pts []*data.Ping, inst *OPW) []*db.Node {
+func buildNodes(pts []*mtrafic.Ping, inst *OPW) []*db.Node {
 	var nodes = make([]*db.Node, 0)
 	for _, p := range pts {
 		n := inst.Push(p)

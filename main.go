@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"runtime"
 	"simplex/opts"
 	"simplex/offset"
-	"runtime"
 )
 
 var Port int

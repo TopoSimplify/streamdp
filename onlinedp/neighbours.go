@@ -42,7 +42,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		J:         node.Range.J,
 		FID:       node.FID,
 		ID:        node.NID,
-		NodeTable: self.Src.NodeTable,
+		NodeTable: self.Src.Table,
 	})
 	if err != nil {
 		log.Panic(err)
@@ -85,7 +85,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	query += ";"
 
 	query = fmt.Sprintf(query,
-		self.Src.NodeTable,      //table
+		self.Src.Table,          //table
 		node.WTK, self.Src.SRID, //geom(wkt, srid)
 		EpsilonDist,
 		node.NID, //id != nid

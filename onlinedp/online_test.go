@@ -37,11 +37,11 @@ func TestOnline(t *testing.T) {
 				cfg.User, cfg.Password, cfg.Database,
 			))
 			var src = &db.DataSrc{
-				Src:       sqlSrc,
-				Config:    cfg,
-				SRID:      serverCfg.SRID,
-				Dim:       serverCfg.Dim,
-				NodeTable: serverCfg.Table,
+				Src:    sqlSrc,
+				Config: cfg,
+				SRID:   serverCfg.SRID,
+				Dim:    serverCfg.Dim,
+				Table:  serverCfg.Table,
 			}
 			g.Assert(err == nil).IsTrue()
 			g.Assert(sqlSrc != nil).IsTrue()

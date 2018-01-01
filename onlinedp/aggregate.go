@@ -8,7 +8,7 @@ import (
 	"database/sql"
 )
 
-type LnrFeat struct {FID int }
+type LnrFeat struct{ FID int }
 
 //Find and merge simple segments
 func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize, fid int) bool {
@@ -19,7 +19,7 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize, fid int) bool {
 	}
 
 	var query = fmt.Sprintf(
-		`SELECT DISTINCT fid  FROM %v ORDER BY fid asc;`, self.Src.NodeTable,
+		`SELECT DISTINCT fid  FROM %v ORDER BY fid asc;`, self.Src.Table,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -37,12 +37,12 @@ func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize, fid int) bool {
 }
 
 //Merge segment fragments where possible
-func (self *OnlineDP) AggregateSimpleSegments(fid,  fragmentSize int) {
+func (self *OnlineDP) AggregateSimpleSegments(fid, fragmentSize int) {
 	var temp = self.tempNodeIDTableName(fid)
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
-	self.copyFragmentIdsIntoTempTable(fid,  fragmentSize, temp)
+	self.copyFragmentIdsIntoTempTable(fid, fragmentSize, temp)
 	//read from temp table nids
 	var nidIter = self.iterTempNIDTable(temp)
 	for nidIter.Next() {
@@ -54,7 +54,7 @@ func (self *OnlineDP) AggregateSimpleSegments(fid,  fragmentSize int) {
 
 func (self *OnlineDP) processNodeFragment(nid int) {
 	var query = fmt.Sprintf(
-		"SELECT id, fid, gob FROM %v WHERE id=%v;", self.Src.NodeTable, nid,
+		"SELECT id, fid, gob FROM %v WHERE id=%v;", self.Src.Table, nid,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -113,7 +113,7 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 	}
 
 	if merged {
-		queries = append(queries, hull.DeleteSQL(self.Src.NodeTable))
+		queries = append(queries, hull.DeleteSQL(self.Src.Table))
 	}
 
 	return queries
@@ -123,17 +123,17 @@ func (self *OnlineDP) checkMerge(merge, hull, neighb *db.Node, queries *[]string
 	var merged = false
 	if self.ValidateMerge(merge, hull.Range, neighb.Range) {
 		*queries = append(*queries,
-			neighb.DeleteSQL(self.Src.NodeTable),
-			merge.InsertSQL(self.Src.NodeTable, self.Src.SRID),
+			neighb.DeleteSQL(self.Src.Table),
+			merge.InsertSQL(self.Src.Table, self.Src.SRID),
 		)
 		merged = true
 	}
 	return merged
 }
 
-func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid,  fragmentSize int, temp string) {
+func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid, fragmentSize int, temp string) {
 	var query = fmt.Sprintf(
-		"SELECT id FROM %v WHERE fid=%v AND size=%v;", self.Src.NodeTable, fid,  fragmentSize,
+		"SELECT id FROM %v WHERE fid=%v AND size=%v;", self.Src.Table, fid, fragmentSize,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {

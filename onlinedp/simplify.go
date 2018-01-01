@@ -37,7 +37,7 @@ func (self *OnlineDP) updateSnapshot(fid int, snapshotTbl string) {
 		SELECT id, size, gob, status
 		FROM %v
 		WHERE fid = %v;`,
-		snapshotTbl, self.Src.NodeTable, fid,
+		snapshotTbl, self.Src.Table, fid,
 	)
 	if _, err := self.Src.Exec(query); err != nil {
 		log.Panic(err)

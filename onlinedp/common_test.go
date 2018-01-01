@@ -107,7 +107,7 @@ func insertNodesIntoOnlineTable(src *db.DataSrc, nds []*db.Node) {
 func queryNodesByStatus(src *db.DataSrc, status int) []*db.Node{
 	var query = fmt.Sprintf(
 		`SELECT id, fid, gob FROM %v WHERE status=%v;`,
-		src.NodeTable, status,
+		src.Table, status,
 	)
 	var h, err = src.Query(query)
 	if err != nil {

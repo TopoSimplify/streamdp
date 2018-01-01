@@ -7,7 +7,7 @@ import (
 	"simplex/rng"
 	"simplex/opts"
 	"simplex/streamdp/pt"
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/offset"
 )
@@ -57,7 +57,7 @@ func (self *OPW) ScoreRelation(val float64) bool {
 	return val > self.Options.Threshold
 }
 
-func (self *OPW) Push(ping *data.Ping) *db.Node {
+func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	var node *db.Node
 	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
 	var I = 0

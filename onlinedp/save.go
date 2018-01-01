@@ -35,7 +35,7 @@ func init() {
 //Find and merge simple segments
 func (self *OnlineDP) SaveSimplification(fid int) {
 	var query bytes.Buffer
-	self.Src.NodeTable = fmt.Sprintf(`%v_simple`, self.Src.Config.Table)
+	self.Src.Table = fmt.Sprintf(`%v_simple`, self.Src.Config.Table)
 	if err := onlineOutputTemplate.Execute(&query, self.Src); err != nil {
 		log.Panic(err)
 	}
@@ -44,7 +44,7 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 		log.Panic(err)
 	}
 
-	var outputTable = self.Src.NodeTable
+	var outputTable = self.Src.Table
 	//o.Src.DuplicateTable(outputTable)
 	self.Src.AlterAsMultiLineString(
 		outputTable, self.Src.Config.GeometryColumn, self.Src.SRID,

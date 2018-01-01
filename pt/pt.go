@@ -1,13 +1,13 @@
 package pt
 
 import (
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 	"github.com/intdxdt/geom"
 )
 
 type Pt struct {
 	*geom.Point
-	Ping *data.Ping
+	Ping *mtrafic.Ping
 	I    int
 }
 

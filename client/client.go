@@ -8,17 +8,19 @@ import (
 	"math/rand"
 	"simplex/db"
 	"database/sql"
+	"simplex/streamdp/config"
+	"simplex/streamdp/common"
+	"path/filepath"
+	"log"
+	"simplex/streamdp/tbl"
 )
 
 var Port int
 var Host string
 var Address string
 var ClearHistoryAddress string
-var SimplifyAddress string
 
 const concurProcs = 8
-const GeomColumn = "geom"
-const IdColumn = "id"
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -27,41 +29,41 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-const tomlpath = "/home/titus/01/godev/src/simplex/streamdp/sandbox/src.toml"
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var msisDir = "/home/titus/01/godev/src/simplex/streamdp/mmsis"
+	var pwd =  common.ExecutionDir()
+	var dataDir = filepath.Join(pwd, "../data")
+	var srcFile = filepath.Join(pwd, "../resource/src.toml")
 	var ignoreDirs = []string{".git", ".idea"}
 	var filter = []string{"toml"}
 
 	ClearHistoryAddress = fmt.Sprintf("http://%v:%v/history/clear", Host, Port)
-	SimplifyAddress = fmt.Sprintf("http://%v:%v/simplify", Host, Port)
 	Address = fmt.Sprintf("http://%v:%v/ping", Host, Port)
 
-	var serverCfg = loadConfig(tomlpath)
-	var cfg = serverCfg.DBConfig()
+	var serverCfg = (&config.Server{}).Load(srcFile)
+	var dbCfg = serverCfg.DBConfig()
 
 	var sqlsrc, err = sql.Open("postgres", fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
-		cfg.User, cfg.Password, cfg.Database,
+		dbCfg.User, dbCfg.Password, dbCfg.Database,
 	))
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	var src = &db.DataSrc{
-		Src:       sqlsrc,
-		Config:    cfg,
-		SRID:      serverCfg.SRID,
-		Dim:       serverCfg.Dim,
-		NodeTable: serverCfg.Table,
+		Src:    sqlsrc,
+		Config: dbCfg,
+		SRID:   serverCfg.SRID,
+		Dim:    serverCfg.Dim,
+		Table:  serverCfg.Table,
 	}
-	initCreateOnlineTable(src, serverCfg)
+	tbl.CreateOnlineTable(src, serverCfg)
 
 	//clear history
 	runProcess(ClearHistoryAddress)
 	//vessel pings
-	vesselPings(msisDir, filter, ignoreDirs, concurProcs)
+	vesselPings(dataDir, filter, ignoreDirs, concurProcs)
 	//simplify
 	//runProcess(SimplifyAddress)
 }

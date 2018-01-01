@@ -8,23 +8,24 @@ import (
 	"database/sql"
 	"path/filepath"
 	_ "github.com/lib/pq"
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 	"gopkg.in/gin-gonic/gin.v1"
 	"simplex/streamdp/onlinedp"
 	"simplex/streamdp/offset"
+	"simplex/streamdp/config"
+	"simplex/streamdp/common"
 )
 
 func NewServer(address string, mode int) *Server {
-	var pwd = ExecutionDir()
-	var server = &Server{Address: address, Mode: mode, Config: &ServerConfig{}}
-	if err := server.Config.Load(filepath.Join(pwd, "src.toml")); err != nil {
-		log.Panic(err)
-	}
+	var pwd = common.ExecutionDir()
+	var server = &Server{Address: address, Mode: mode, Config: &config.Server{}}
+	var fname = filepath.Join(pwd, "../resource/src.toml")
+	server.Config.Load(fname)
 
-	var cfg = server.Config.DBConfig()
+	var dbCfg = server.Config.DBConfig()
 	inputSrc, err := sql.Open("postgres", fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
-		cfg.User, cfg.Password, cfg.Database,
+		dbCfg.User, dbCfg.Password, dbCfg.Database,
 	))
 
 	if err != nil {
@@ -32,18 +33,18 @@ func NewServer(address string, mode int) *Server {
 	}
 
 	server.Src = &db.DataSrc{
-		Src:       inputSrc,
-		Config:    cfg,
-		SRID:      server.Config.SRID,
-		Dim:       server.Config.Dim,
-		NodeTable: server.Config.Table,
+		Src:    inputSrc,
+		Config: dbCfg,
+		SRID:   server.Config.SRID,
+		Dim:    server.Config.Dim,
+		Table:  server.Config.Table,
 	}
-	server.ConstSrc = db.NewDataSrc(filepath.Join(pwd, "consts.toml"))
+	server.ConstSrc = db.NewDataSrc(filepath.Join(pwd, "../resource/consts.toml"))
 	return server
 }
 
 type Server struct {
-	Config   *ServerConfig
+	Config   *config.Server
 	Address  string
 	Mode     int
 	Src      *db.DataSrc
@@ -60,6 +61,7 @@ func (s *Server) Run() {
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
 	router.POST("/ping", s.trafficRouter)
 	router.POST("/history/clear", s.clearHistory)
 	router.POST("/simplify", s.clearHistory)
@@ -82,7 +84,7 @@ func (s *Server) init() {
 	)
 
 	//create online table
-	if err := s.initCreateOnlineTable(); err != nil {
+	if err := db.CreateNodeTable(s.Src); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -98,7 +100,7 @@ func (s *Server) clearHistory(ctx *gin.Context) {
 //}
 
 func (s *Server) trafficRouter(ctx *gin.Context) {
-	var msg = &data.PingMsg{}
+	var msg = &mtrafic.PingMsg{}
 	var err = ctx.BindJSON(msg)
 
 	if err != nil {

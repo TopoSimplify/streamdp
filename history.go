@@ -3,7 +3,7 @@ package main
 import (
 	"sync"
 	"simplex/db"
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 )
 
 type History struct {
@@ -36,7 +36,7 @@ func (h *History) MarkDone(id int) []*db.Node {
 	return nodes
 }
 
-func (h *History) Update(id int, ping *data.Ping) *db.Node {
+func (h *History) Update(id int, ping *mtrafic.Ping) *db.Node {
 	var node *db.Node
 	h.Lock()
 	//----------------------------------------------

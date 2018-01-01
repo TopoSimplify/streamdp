@@ -6,7 +6,7 @@ import (
 )
 
 func (self *OnlineDP) tempNodeIDTableName(fid int) string {
-	return fmt.Sprintf("temp_%v_%v", self.Src.NodeTable, fid)
+	return fmt.Sprintf("temp_%v_%v", self.Src.Table, fid)
 }
 
 func (self *OnlineDP) tempCreateNodeIdTable(temp string) {
@@ -63,7 +63,7 @@ func (self *OnlineDP) tempDropTable(temp string) {
 //=============================================================
 
 func (self *OnlineDP) tempQueryTableName() string {
-	return fmt.Sprintf("tempQ_%v", self.Src.NodeTable)
+	return fmt.Sprintf("tempQ_%v", self.Src.Table)
 }
 
 func (self *OnlineDP) tempCreateTempQueryTable(temp string) {

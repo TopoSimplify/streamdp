@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
-	"simplex/streamdp/data"
+	"simplex/streamdp/mtrafic"
 )
 
 //post to server
 func postToServer(token string, mmsi int, keepAlive bool) {
-	var pmsg = data.PingMsg{Id: mmsi, Ping: token, KeepAlive: keepAlive}
+	var pmsg = mtrafic.PingMsg{Id: mmsi, Ping: token, KeepAlive: keepAlive}
 	var msg, err = json.Marshal(pmsg)
 
 	if err != nil {
