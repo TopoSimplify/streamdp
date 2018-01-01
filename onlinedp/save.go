@@ -33,7 +33,7 @@ func init() {
 //obj.SaveSimplification()
 
 //Find and merge simple segments
-func (self *OnlineDP) SaveSimplification() {
+func (self *OnlineDP) SaveSimplification(fid int) {
 	var query bytes.Buffer
 	self.Src.NodeTable = fmt.Sprintf(`%v_simple`, self.Src.Config.Table)
 	if err := onlineOutputTemplate.Execute(&query, self.Src); err != nil {

@@ -92,10 +92,10 @@ func (s *Server) clearHistory(ctx *gin.Context) {
 	ctx.JSON(Success, gin.H{"message": "success"})
 }
 
-func (s *Server) simplify(ctx *gin.Context) {
-	s.OnlineDP.Simplify()
-	ctx.JSON(Success, gin.H{"message": "success"})
-}
+//func (s *Server) simplify(ctx *gin.Context) {
+//	s.OnlineDP.Simplify()
+//	ctx.JSON(Success, gin.H{"message": "success"})
+//}
 
 func (s *Server) trafficRouter(ctx *gin.Context) {
 	var msg = &data.PingMsg{}

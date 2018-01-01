@@ -8,40 +8,36 @@ import (
 	"simplex/dp"
 )
 
-func (self *OnlineDP) FindAndMarkDeformables() {
-	var temp = self.tempNodeIDTableName()
+func (self *OnlineDP) FindAndMarkDeformables(fid int, snapshotTbl string) {
+	var temp = self.tempNodeIDTableName(fid)
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
-	var worker = func(hull *db.Node) bool {
-		// 0. find deformable node
-		var selections = self.selectDeformable(hull)
-		for _, o := range selections {
-			self.tempInsertInNodeIdTable(temp, o.NID)
-		}
-		return true
-	}
-
-	var query = fmt.Sprintf(`SELECT id, fid, gob  FROM  %v WHERE status=%v`,
-		self.Src.NodeTable, NullState)
+	var query = fmt.Sprintf(
+		`SELECT id,  gob  FROM  %v WHERE status=%v`, snapshotTbl, NullState,
+	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
 
 	for h.Next() {
+		var id int
 		var gob string
-		var id, fid int
-		h.Scan(&id, &fid, &gob)
-		o := db.Deserialize(gob)
+		h.Scan(&id, &gob)
+		var o = db.Deserialize(gob)
 		o.NID, o.FID = id, fid
-		worker(o)
+
+		var selections = self.selectDeformable(o)
+		for _, s := range selections {
+			self.tempInsertInNodeIdTable(temp, s.NID)
+		}
 	}
 
-	self.MarkNullState(temp)
+	self.MarkNullState(temp, snapshotTbl)
 }
 
-func (self *OnlineDP) MarkNullState(temp string) {
+func (self *OnlineDP) MarkNullState(temp, snapshotTbl string) {
 	const bufferSize = 200
 	var buf = make([]int, 0)
 	var query = fmt.Sprintf(`SELECT id  FROM  %v;`, temp)
@@ -56,18 +52,18 @@ func (self *OnlineDP) MarkNullState(temp string) {
 		h.Scan(&id)
 		buf = append(buf, id)
 		if len(buf) > bufferSize {
-			self.MarkNodesForDeformation(buf)
+			self.MarkNodesForDeformation(buf, snapshotTbl)
 			buf = make([]int, 0) //reset
 		}
 	}
 
 	//flush
 	if len(buf) > 0 {
-		self.MarkNodesForDeformation(buf)
+		self.MarkNodesForDeformation(buf, snapshotTbl)
 	}
 }
 
-func (self *OnlineDP) MarkNodesForDeformation(selections []int) int {
+func (self *OnlineDP) MarkNodesForDeformation(selections []int, snapshotTbl string) int {
 	if len(selections) == 0 {
 		return 0
 	}
@@ -86,23 +82,23 @@ func (self *OnlineDP) MarkNodesForDeformation(selections []int) int {
 			( VALUES %v ) AS u2 ( id, status )
 		WHERE
 			u2.id = u.id;`,
-		self.Src.NodeTable, buf.String(),
+		snapshotTbl, buf.String(),
 	)
 	var r, err = self.Src.Exec(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	nrs, err := r.RowsAffected()
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return int(nrs)
 }
 
-func (self *OnlineDP) FindAndMarkNullStateAsCollapsible() {
+func (self *OnlineDP) FindAndMarkNullStateAsCollapsible(fid int, snapshotTbl string) {
 	var query = fmt.Sprintf(
 		`UPDATE %v SET status=%v WHERE status=%v;`,
-		self.Src.NodeTable, Collapsible, NullState,
+		snapshotTbl, Collapsible, NullState,
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
@@ -110,32 +106,32 @@ func (self *OnlineDP) FindAndMarkNullStateAsCollapsible() {
 	}
 }
 
-func (self *OnlineDP) FindAndSplitDeformables() {
-	var tempQ = self.tempQueryTableName()
+func (self *OnlineDP) FindAndSplitDeformables(fid int, snapshotTbl string) {
+	var tempQ = fmt.Sprintf("%v_%v", self.tempQueryTableName(), fid)
 	self.tempCreateTempQueryTable(tempQ)
 	defer self.tempDropTable(tempQ)
 
 	var worker = func(hull *db.Node) string {
 		if hull.Range.Size() > 1 {
 			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
-			return ha.InsertSQL(self.Src.NodeTable, self.Src.SRID, hb)
+			return ha.InsertSQL(snapshotTbl, self.Src.SRID, hb)
 		}
-		return hull.UpdateSQL(self.Src.NodeTable, NullState)
+		return hull.UpdateSQL(snapshotTbl, NullState)
 	}
 
-	var query = fmt.Sprintf(`SELECT id, fid, gob  FROM  %v WHERE status=%v;`, self.Src.NodeTable, SplitNode)
+	var query = fmt.Sprintf(`SELECT id, gob  FROM  %v WHERE status=%v;`, snapshotTbl, SplitNode)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	var id, fid int
-	var gob string
 	var bufferSize = 100
 	var buf = make([]string, 0)
-
 	for h.Next() {
-		h.Scan(&id, &fid, &gob)
+		var id int
+		var gob string
+
+		h.Scan(&id, &gob)
 		o := db.Deserialize(gob)
 		o.NID, o.FID = id, fid
 
@@ -154,18 +150,19 @@ func (self *OnlineDP) FindAndSplitDeformables() {
 	self.tempExecuteQueries(tempQ)
 }
 
-func (self *OnlineDP) FindAndCleanUpDeformables() {
-	var query = fmt.Sprintf(
-		`DELETE FROM %v WHERE status=%v;`, self.Src.NodeTable, SplitNode,
-	)
+func (self *OnlineDP) FindAndCleanUpDeformables(fid int, snapshotTbl string) {
+	var query = fmt.Sprintf(`DELETE FROM %v WHERE status=%v;`, snapshotTbl, SplitNode)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
-func (self *OnlineDP) HasMoreDeformables() bool {
-	var query = fmt.Sprintf(`SELECT id FROM %v WHERE status=%v LIMIT 1;`, self.Src.NodeTable, NullState)
+func (self *OnlineDP) HasMoreDeformables(fid int, tbl string) bool {
+	var query = fmt.Sprintf(
+		`SELECT id FROM %v WHERE status=%vLIMIT 1;`,
+		tbl, NullState,
+	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)

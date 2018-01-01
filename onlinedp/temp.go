@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func (self *OnlineDP) tempNodeIDTableName() string {
-	return fmt.Sprintf("temp_%v", self.Src.NodeTable)
+func (self *OnlineDP) tempNodeIDTableName(fid int) string {
+	return fmt.Sprintf("temp_%v_%v", self.Src.NodeTable, fid)
 }
 
 func (self *OnlineDP) tempCreateNodeIdTable(temp string) {
@@ -15,6 +15,25 @@ func (self *OnlineDP) tempCreateNodeIdTable(temp string) {
 		    id  INT NOT NULL,
 		    CONSTRAINT pid_%v PRIMARY KEY (id)
 		) WITH (OIDS=FALSE);`, temp, temp,
+	)
+	var _, err = self.Src.Exec(query)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (self *OnlineDP) tempCreateSnapshotTable(temp string) {
+	var query = fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %v (
+		    id      INT NOT NULL,
+		    size    INT,
+			gob     TEXT NOT NULL,
+		    status  INT DEFAULT 0,
+		    CONSTRAINT pid_%v PRIMARY KEY (id)
+ 		) WITH (OIDS=FALSE);
+		CREATE INDEX idx_size_%v ON %v (size);
+		CREATE INDEX idx_status_%v ON %v (status);
+`, temp, temp, temp, temp, temp, temp,
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {

@@ -11,7 +11,11 @@ import (
 	"simplex/node"
 	"text/template"
 	"github.com/intdxdt/geom"
+	"math/rand"
+	"time"
 )
+
+
 
 const ServerCfg = "/home/titus/01/godev/src/simplex/streamdp/test/src.toml"
 
@@ -46,7 +50,9 @@ func init() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	rand.Seed(time.Now().UnixNano())
 }
+
 func printNodes(nodes []*db.Node) {
 	for _, h := range nodes {
 		fmt.Println(h.WTK)
@@ -57,13 +63,14 @@ func linearCoords(wkt string) []*geom.Point {
 	return geom.NewLineStringFromWKT(wkt).Coordinates()
 }
 
-func createNodes(indxs [][]int, coords []*geom.Point) []*db.Node {
+func createNodes(indxs [][]int, coords []*geom.Point)  []*db.Node{
 	poly := pln.New(coords)
 	hulls := make([]*db.Node, 0)
+	var fid = rand.Intn(100)
 	for _, o := range indxs {
 		var r = rng.NewRange(o[0], o[1])
 		//var dpnode = newNodeFromPolyline(poly, r, dp.NodeGeometry)
-		var n = db.NewDBNode(poly.SubCoordinates(r), r, 1452, 1, dp.NodeGeometry, "x7")
+		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, 0, dp.NodeGeometry, "x7")
 		hulls = append(hulls, n)
 	}
 	return hulls

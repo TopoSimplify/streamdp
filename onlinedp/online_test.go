@@ -25,6 +25,7 @@ func TestOnline(t *testing.T) {
 				{18, 19}, {19, len(coords) - 1}}
 			var hulls = createNodes(intRanges, coords)
 			//printNodes(hulls)
+			var fid = hulls[0].FID
 
 			//var options = &opts.Opts{MinDist: 10}
 			var serverCfg = loadConfig(ServerCfg)
@@ -86,7 +87,7 @@ func TestOnline(t *testing.T) {
 			g.Assert(collapsible).IsFalse()
 			g.Assert(len(sideEffects)).Equal(1)
 
-			g.Assert(inst.HasMoreDeformables()).IsTrue()
+			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
 			//----------------------simplify-------------------------------------------
 			// 1.find and mark deformable nodes
 			inst.FindAndMarkDeformables()
@@ -108,7 +109,7 @@ func TestOnline(t *testing.T) {
 			g.Assert(nodes[1].Range.Equals(rng.NewRange(6, 9))).IsTrue()
 
 			//-------------has more deformables--------------------------------
-			g.Assert(inst.HasMoreDeformables()).IsTrue()
+			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
 			// 1.find and mark deformable nodes
 			inst.FindAndMarkDeformables()
 			nodes = queryNodesByStatus(src, SplitNode)

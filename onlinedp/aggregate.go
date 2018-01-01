@@ -8,44 +8,41 @@ import (
 	"database/sql"
 )
 
-type LnrFeat struct {
-	FID, Part int
-}
+type LnrFeat struct {FID int }
 
 //Find and merge simple segments
-func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize int) bool {
-	//aggregate src into linear fid and parts
-	var worker = func(fid, part int) bool {
-		self.AggregateSimpleSegments(fid, part, fragmentSize)
+func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize, fid int) bool {
+	//aggregate src into linear fid
+	var worker = func(fid int) bool {
+		self.AggregateSimpleSegments(fid, fragmentSize)
 		return true
 	}
 
 	var query = fmt.Sprintf(
-		`SELECT DISTINCT fid, part  FROM %v ORDER BY fid asc, part asc;`,
-		self.Src.NodeTable,
+		`SELECT DISTINCT fid  FROM %v ORDER BY fid asc;`, self.Src.NodeTable,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	var fid, part int
 	var bln bool
 	for h.Next() {
-		h.Scan(&fid, &part)
-		o := worker(fid, part)
+		var fid int
+		h.Scan(&fid)
+		o := worker(fid)
 		bln = bln && o
 	}
 	return bln
 }
 
 //Merge segment fragments where possible
-func (self *OnlineDP) AggregateSimpleSegments(fid, part, fragmentSize int) {
-	var temp = self.tempNodeIDTableName() + fmt.Sprintf("_%v_%v", fid, part)
+func (self *OnlineDP) AggregateSimpleSegments(fid,  fragmentSize int) {
+	var temp = self.tempNodeIDTableName(fid)
 	self.tempCreateNodeIdTable(temp)
 	defer self.tempDropTable(temp)
 
-	self.copyFragmentIdsIntoTempTable(fid, part, fragmentSize, temp)
+	self.copyFragmentIdsIntoTempTable(fid,  fragmentSize, temp)
 	//read from temp table nids
 	var nidIter = self.iterTempNIDTable(temp)
 	for nidIter.Next() {
@@ -134,10 +131,9 @@ func (self *OnlineDP) checkMerge(merge, hull, neighb *db.Node, queries *[]string
 	return merged
 }
 
-func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid, part, fragmentSize int, temp string) {
+func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid,  fragmentSize int, temp string) {
 	var query = fmt.Sprintf(
-		"SELECT id FROM %v WHERE fid=%v AND part=%v AND size=%v;",
-		self.Src.NodeTable, fid, part, fragmentSize,
+		"SELECT id FROM %v WHERE fid=%v AND size=%v;", self.Src.NodeTable, fid,  fragmentSize,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {

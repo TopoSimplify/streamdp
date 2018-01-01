@@ -50,5 +50,5 @@ func ContiguousCoordinates(prev, next *db.Node) []*geom.Point {
 func contiguousFragments(coordinates []*geom.Point, ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
 	var r = Range(ha.Range, hb.Range)
 	// i...[ha]...k...[hb]...j
-	return db.NewDBNode(coordinates, r, ha.FID, ha.Part, gfn)
+	return db.NewDBNode(coordinates, r, ha.FID,  gfn)
 }

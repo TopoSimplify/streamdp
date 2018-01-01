@@ -15,11 +15,11 @@ func AtScoreSelection(hull *db.Node, scoreFn ScoreFn, gfn geom.GeometryFn) (*db.
 	var k, _ = scoreFn(coordinates)
 	var rk = rg.Index(k)
 	// ------------------------------------------------------------------------------------
-	var fid, part = hull.FID, hull.Part
+	var fid = hull.FID
 	var idA, idB = hull.SubNodeIds()
 	// i..[ha]..k..[hb]..j
-	var ha = db.NewDBNode(coordinates[0:k+1], rng.NewRange(i, rk), fid, part, gfn, idA)
-	var hb = db.NewDBNode(coordinates[k:], rng.NewRange(rk, j), fid, part, gfn, idB)
+	var ha = db.NewDBNode(coordinates[0:k+1], rng.NewRange(i, rk), fid, gfn, idA)
+	var hb = db.NewDBNode(coordinates[k:], rng.NewRange(rk, j), fid, gfn, idB)
 	// ------------------------------------------------------------------------------------
 	return ha, hb
 }
@@ -32,12 +32,12 @@ func AtIndex(hull *db.Node, indices []int, gfn geom.GeometryFn) []*db.Node {
 	var subHulls = make([]*db.Node, 0, len(ranges))
 	var I = hull.Range.I
 	var i, j int
-	var fid, part = hull.FID, hull.Part
+	var fid = hull.FID
 	var coords []*geom.Point
 	for _, r := range ranges {
 		i, j = r.I-I, r.J-I
 		coords = coordinates[i:j+1]
-		subHulls = append(subHulls, db.NewDBNode(coords, r, fid, part, gfn))
+		subHulls = append(subHulls, db.NewDBNode(coords, r, fid, gfn))
 	}
 	return subHulls
 }

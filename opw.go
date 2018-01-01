@@ -24,7 +24,6 @@ const (
 //SimplificationType OPW
 type OPW struct {
 	Id            int
-	Part          int
 	Nodes         DBNodes
 	Options       *opts.Opts
 	Score         lnr.ScoreFn
@@ -154,7 +153,7 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	}
 
 	//new node
-	return db.NewDBNode(cache, rng.NewRange(i, j), self.Id, self.Part, NodeGeometry)
+	return db.NewDBNode(cache, rng.NewRange(i, j), self.Id, NodeGeometry)
 }
 
 func (self *OPW) cacheAsPoints() []*geom.Point {
@@ -177,7 +176,7 @@ func (self *OPW) createNode() *db.Node {
 	return db.NewDBNode(
 		self.cacheAsPoints(),
 		rng.NewRange(self.anchor, self.float),
-		self.Id, self.Part, NodeGeometry,
+		self.Id,NodeGeometry,
 	)
 }
 

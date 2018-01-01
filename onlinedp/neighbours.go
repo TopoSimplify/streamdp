@@ -42,7 +42,6 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		J:         node.Range.J,
 		FID:       node.FID,
 		ID:        node.NID,
-		Part:      node.Part,
 		NodeTable: self.Src.NodeTable,
 	})
 	if err != nil {

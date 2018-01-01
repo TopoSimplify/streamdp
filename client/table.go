@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS {{.Table}} (
     j INT NOT NULL,
     size INT CHECK (size > 0),
     fid INT NOT NULL,
-    part INT NOT NULL,
     gob TEXT NOT NULL,
     geom GEOMETRY(Geometry, {{.SRID}}) NOT NULL,
     status INT DEFAULT 0,
@@ -25,7 +24,6 @@ CREATE INDEX idx_i_{{.Table}} ON {{.Table}} (i);
 CREATE INDEX idx_j_{{.Table}} ON {{.Table}} (j);
 CREATE INDEX idx_size_{{.Table}} ON {{.Table}} (size);
 CREATE INDEX idx_fid_{{.Table}} ON {{.Table}} (fid);
-CREATE INDEX idx_part_{{.Table}} ON {{.Table}} (part);
 CREATE INDEX idx_status_{{.Table}} ON {{.Table}} (status);
 CREATE INDEX gidx_{{.Table}} ON {{.Table}} USING GIST (geom);
 `

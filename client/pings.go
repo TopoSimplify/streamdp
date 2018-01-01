@@ -2,13 +2,13 @@ package main
 
 import (
 	"log"
+	"fmt"
 	"sync"
 	"time"
+	"spinner"
 	"simplex/streamdp/data"
 	"github.com/intdxdt/fan"
 	"github.com/intdxdt/fileglob"
-	"spinner"
-	"fmt"
 )
 
 //vessel pings
