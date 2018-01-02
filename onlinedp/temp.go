@@ -22,25 +22,6 @@ func (self *OnlineDP) tempCreateNodeIdTable(temp string) {
 	}
 }
 
-func (self *OnlineDP) tempCreateSnapshotTable(temp string) {
-	var query = fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %v (
-		    id      INT NOT NULL,
-		    size    INT,
-			gob     TEXT NOT NULL,
-		    status  INT DEFAULT 0,
-		    CONSTRAINT pid_%v PRIMARY KEY (id)
- 		) WITH (OIDS=FALSE);
-		CREATE INDEX idx_size_%v ON %v (size);
-		CREATE INDEX idx_status_%v ON %v (status);
-`, temp, temp, temp, temp, temp, temp,
-	)
-	var _, err = self.Src.Exec(query)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (self *OnlineDP) tempInsertInNodeIdTable(temp string, nid int) {
 	var query = fmt.Sprintf(
 		`INSERT INTO %v (id) VALUES (%v) ON CONFLICT (id) DO NOTHING;`,

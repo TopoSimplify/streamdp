@@ -3,51 +3,36 @@ package onlinedp
 import (
 	"fmt"
 	"log"
-	"bytes"
 	"strings"
 	"simplex/db"
 	"simplex/ctx"
 	"simplex/rng"
-	"text/template"
 	"github.com/intdxdt/geom"
 	"github.com/paulmach/go.geojson"
+	"simplex/streamdp/common"
 )
 
 type NeighbQ struct {
-	ID, I, J, FID, Part int
+	ID, I, J, FID, Snap int
 	NodeTable           string
 }
 
-var neighbTpl = `
-	SELECT id, fid, gob
-	FROM  {{.NodeTable}}
-	WHERE fid={{.FID}} AND part={{.Part}} AND (j={{.I}} OR i={{.J}}) AND id <> {{.ID}}
-	ORDER BY i;
-`
-
-var neighbTemplate *template.Template
-
-func init() {
-	var err error
-	neighbTemplate, err = template.New("neighb_table").Parse(neighbTpl)
-	if err != nil {
-		log.Fatalln(err)
-	}
-}
-
 func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db.Node) {
-	var query bytes.Buffer
-	var err = neighbTemplate.Execute(&query, NeighbQ{
-		I:         node.Range.I,
-		J:         node.Range.J,
-		FID:       node.FID,
-		ID:        node.NID,
-		NodeTable: self.Src.Table,
-	})
-	if err != nil {
-		log.Panic(err)
-	}
-	h, err := self.Src.Query(query.String())
+	var query = fmt.Sprintf(`
+		SELECT id, fid, node
+		FROM  %v
+		WHERE fid=%v AND snapshot=%v AND (j=%v OR i=%v) AND id <> %v
+		ORDER BY i;
+	`,
+		self.Src.Table,
+		node.FID,
+		common.Snap,
+		node.Range.I,
+		node.Range.J,
+		node.NID,
+	)
+
+	h, err := self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -55,7 +40,6 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	var idx = 0
 	var gob string
 	var id, fid int
-	var prev, next *db.Node
 
 	var nodes []*db.Node
 	for h.Next() {
@@ -65,19 +49,20 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 		if idx == 0 || idx == 1 {
 			nodes = append(nodes, o)
 		} else {
-			fmt.Println(query.String())
+			fmt.Println(query)
 			log.Panic("expects only two neighbours : prev and next")
 		}
 		idx++
 	}
-	prev, next = Neighbours(node, nodes)
-	return prev, next
+	return Neighbours(node, nodes)
 }
 
 func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...*rng.Range) []*db.Node {
 	var query = `
-		SELECT id, fid, gob FROM  %v WHERE
-		ST_DWithin(ST_GeomFromText('%v', %v), geom, %v) AND id <> %v `
+		SELECT id, fid, node
+		FROM  %v
+		WHERE  ST_DWithin(ST_GeomFromText('%v', %v), geom, %v)
+		AND id <> %v AND snapshot=%v `
 	if independentPlns {
 		//if idependent polylines then restrict neighbours to this fid
 		query += fmt.Sprintf(` AND fid = %v`, node.FID)
@@ -88,7 +73,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 		self.Src.Table,          //table
 		node.WTK, self.Src.SRID, //geom(wkt, srid)
 		EpsilonDist,
-		node.NID, //id != nid
+		node.NID, common.Snap, //id != nid
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -123,8 +108,11 @@ func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) []*ct
 	if self.Const == nil {
 		return ctxs
 	}
-	var query = `SELECT ST_AsGeoJson(%v) FROM  %v WHERE ST_DWithin(ST_GeomFromText('%v', %v), %v, %v);`
-	query = fmt.Sprintf(query,
+	var query = fmt.Sprintf(`
+			SELECT ST_AsGeoJson(%v)
+			FROM  %v
+			WHERE ST_DWithin(ST_GeomFromText('%v', %v), %v, %v);
+		`,
 		self.Const.Config.GeometryColumn, //as_geojson(geom)
 		self.Const.Config.Table,          //table
 		queryWKT, self.Const.SRID,        //geom(wkt, srid)

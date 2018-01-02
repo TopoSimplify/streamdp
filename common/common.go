@@ -11,12 +11,46 @@ import (
 	"github.com/intdxdt/math"
 	"github.com/intdxdt/rtree"
 	"github.com/intdxdt/deque"
+	"simplex/db"
+	"fmt"
+	"simplex/streamdp/sandbox/s"
 )
 
+const (
+	UnSnap   = iota
+	Snap
+)
 const EpsilonDist   = 1.0e-5
 
 func init(){
 	rand.Seed(time.Now().UnixNano())
+}
+
+//Note : column fields corresponding to node.ColumnValues
+const SnapNodeColumnFields = "fid, node, geom, i, j, size, snapshot"
+
+func SnapshotNodeColumnValues(srid int, nodes ...*db.Node) [][]string {
+	var colVals = func(n *db.Node) []string {
+		return []string{
+			fmt.Sprintf(`%v`, n.FID),
+			fmt.Sprintf(`'%v'`, db.Serialize(n)),
+			fmt.Sprintf(`ST_GeomFromText('%v', %v)`, n.WTK, srid),
+			fmt.Sprintf(`%v`, n.Range.I),
+			fmt.Sprintf(`%v`, n.Range.J),
+			fmt.Sprintf(`%v`, n.Range.Size()),
+			fmt.Sprintf(`%v`, Snap),
+		}
+	}
+	var vals = make([][]string, 0)
+	for _, n := range nodes {
+		vals = append(vals, colVals(n))
+	}
+	return vals
+}
+
+
+func SimpleTable(tbl string) string {
+	return fmt.Sprintf(`%v_simple`, tbl)
 }
 
 //Convert slice of interface to ints

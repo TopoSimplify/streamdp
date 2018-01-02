@@ -3,38 +3,39 @@ package onlinedp
 import (
 	"fmt"
 	"log"
+	"simplex/streamdp/common"
 )
 
 func (self *OnlineDP) Simplify(fid int) {
-	var snapshotTbl = fmt.Sprintf("temp_snapshot_%v", fid)
-	self.tempCreateSnapshotTable(snapshotTbl)
-	defer self.tempDropTable(snapshotTbl)
-
-	self.updateSnapshot(fid, snapshotTbl)
+	self.MarkSnapshot(fid, common.Snap)
+	defer self.MarkSnapshot(fid, common.UnSnap)
 
 	// 0.while has more deformables : loop
-	for self.HasMoreDeformables(fid, snapshotTbl) {
+	for self.HasMoreDeformables(fid) {
 		// 1.find and mark deformable nodes
-		self.FindAndMarkDeformables(fid, snapshotTbl)
+		self.MarkDeformables(fid)
 		// 2.mark valid nodes as collapsible
-		self.FindAndMarkNullStateAsCollapsible(fid, snapshotTbl)
+		self.MarkNullStateAsCollapsible(fid)
 		// 3.find and split deformable nodes, set status as nullstate
-		self.FindAndSplitDeformables(fid, snapshotTbl)
+		self.SplitDeformables(fid)
 		// 4.remove deformable nodes
-		self.FindAndCleanUpDeformables(fid, snapshotTbl)
+		self.CleanUpDeformables(fid)
 	}
 
-	self.FindAndProcessSimpleSegments(MergeFragmentSize, fid)
+	//aggregate segments
+	self.AggregateSimpleSegments(fid, MergeFragmentSize)
+
 	//save simplification
 	self.SaveSimplification(fid)
+
 	//drop node table
 	//self.Src.DeleteTable(self.Src.NodeTable)
 }
 
 func (self *OnlineDP) updateSnapshot(fid int, snapshotTbl string) {
 	var query = fmt.Sprintf(`
-		INSERT INTO %v (id, size, gob, status)
-		SELECT id, size, gob, status
+		INSERT INTO %v (id, size, node, status)
+		SELECT id, size, node, status
 		FROM %v
 		WHERE fid = %v;`,
 		snapshotTbl, self.Src.Table, fid,

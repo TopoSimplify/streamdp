@@ -85,8 +85,31 @@ func (s *Server) init() {
 
 	//create online table
 	if err := db.CreateNodeTable(s.Src); err != nil {
-		log.Fatalln(err)
+		log.Panic(err)
 	}
+
+	var simpleTable = fmt.Sprintf(`%v_simple`, s.Src.Table)
+	fmt.Println("simple : ", simpleTable)
+	var query = fmt.Sprintf(`
+		DROP TABLE IF EXISTS %v CASCADE;
+		CREATE TABLE IF NOT EXISTS %v (
+		    id          INT NOT NULL,
+		    geom        GEOMETRY(Geometry, %v) NOT NULL,
+		    CONSTRAINT  pid_%v PRIMARY KEY (id)
+		) WITH (OIDS=FALSE);`,
+		simpleTable,
+		simpleTable,
+		s.Src.SRID,
+		simpleTable,
+	)
+
+	if _, err := s.Src.Exec(query); err != nil {
+		log.Panic(err)
+	}
+	//o.Src.DuplicateTable(outputTable)
+	s.Src.AlterAsMultiLineString(
+		simpleTable, s.Src.Config.GeometryColumn, s.Src.SRID,
+	)
 }
 
 func (s *Server) clearHistory(ctx *gin.Context) {

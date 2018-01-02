@@ -66,6 +66,7 @@ func (self *OnlineDP) ByFeatureClassIntersection(hull *db.Node, neighbs []*db.No
 	}
 	return bln
 }
+
 //find context_geom deformable hulls
 func (self *OnlineDP) SelectFeatureClass(hull *db.Node, ctxHulls []*db.Node) []*db.Node {
 	var n int

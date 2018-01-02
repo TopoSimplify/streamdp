@@ -6,37 +6,12 @@ import (
 	"simplex/db"
 	"simplex/dp"
 	"database/sql"
+	"simplex/streamdp/common"
 )
 
 type LnrFeat struct{ FID int }
 
-//Find and merge simple segments
-func (self *OnlineDP) FindAndProcessSimpleSegments(fragmentSize, fid int) bool {
-	//aggregate src into linear fid
-	var worker = func(fid int) bool {
-		self.AggregateSimpleSegments(fid, fragmentSize)
-		return true
-	}
-
-	var query = fmt.Sprintf(
-		`SELECT DISTINCT fid  FROM %v ORDER BY fid asc;`, self.Src.Table,
-	)
-	var h, err = self.Src.Query(query)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	var bln bool
-	for h.Next() {
-		var fid int
-		h.Scan(&fid)
-		o := worker(fid)
-		bln = bln && o
-	}
-	return bln
-}
-
-//Merge segment fragments where possible
+//Merge node fragments
 func (self *OnlineDP) AggregateSimpleSegments(fid, fragmentSize int) {
 	var temp = self.tempNodeIDTableName(fid)
 	self.tempCreateNodeIdTable(temp)
@@ -53,8 +28,13 @@ func (self *OnlineDP) AggregateSimpleSegments(fid, fragmentSize int) {
 }
 
 func (self *OnlineDP) processNodeFragment(nid int) {
-	var query = fmt.Sprintf(
-		"SELECT id, fid, gob FROM %v WHERE id=%v;", self.Src.Table, nid,
+	var query = fmt.Sprintf(`
+			SELECT id, fid, node
+			FROM %v
+			WHERE id=%v;
+		`,
+		self.Src.Table,
+		nid,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -105,11 +85,11 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 
 	var merged = false
 	if ma != nil {
-		merged = self.checkMerge(ma, hull, na, &queries)
+		merged = self.updateMergeQuery(ma, hull, na, &queries)
 	}
 
 	if !merged && mb != nil {
-		merged = self.checkMerge(mb, hull, nb, &queries)
+		merged = self.updateMergeQuery(mb, hull, nb, &queries)
 	}
 
 	if merged {
@@ -119,12 +99,13 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 	return queries
 }
 
-func (self *OnlineDP) checkMerge(merge, hull, neighb *db.Node, queries *[]string) bool {
+func (self *OnlineDP) updateMergeQuery(merge, hull, neighb *db.Node, queries *[]string) bool {
 	var merged = false
 	if self.ValidateMerge(merge, hull.Range, neighb.Range) {
+		var vals = common.SnapshotNodeColumnValues(self.Src.SRID, merge)
 		*queries = append(*queries,
 			neighb.DeleteSQL(self.Src.Table),
-			merge.InsertSQL(self.Src.Table, self.Src.SRID),
+			db.SQLInsertIntoTable(self.Src.Table, common.SnapNodeColumnFields, vals),
 		)
 		merged = true
 	}
@@ -132,13 +113,20 @@ func (self *OnlineDP) checkMerge(merge, hull, neighb *db.Node, queries *[]string
 }
 
 func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid, fragmentSize int, temp string) {
-	var query = fmt.Sprintf(
-		"SELECT id FROM %v WHERE fid=%v AND size=%v;", self.Src.Table, fid, fragmentSize,
+	var query = fmt.Sprintf(`
+		SELECT id
+		FROM %v
+		WHERE fid=%v AND snapshot=%v AND size=%v;
+	`,
+		self.Src.Table,
+		fid, common.Snap, fragmentSize,
 	)
+
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
+
 	for h.Next() {
 		var nid int
 		h.Scan(&nid)

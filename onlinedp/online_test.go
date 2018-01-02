@@ -90,18 +90,18 @@ func TestOnline(t *testing.T) {
 			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
 			//----------------------simplify-------------------------------------------
 			// 1.find and mark deformable nodes
-			inst.FindAndMarkDeformables()
+			inst.MarkDeformables()
 			var nodes = queryNodesByStatus(src, SplitNode)
 			g.Assert(len(nodes)).Equal(1)
 			g.Assert(nodes[0].Range.Equals(hulls[2].Range)).IsTrue()
 			// 2.mark valid nodes as collapsible
-			inst.FindAndMarkNullStateAsCollapsible()
+			inst.MarkNullStateAsCollapsible()
 			nodes = queryNodesByStatus(src, Collapsible)
 			g.Assert(len(nodes)).Equal(len(hulls) - 1)
 			// 3.find and split deformable nodes, set status as nullstate
-			inst.FindAndSplitDeformables()
+			inst.SplitDeformables()
 			//// 4.remove deformable nodes
-			inst.FindAndCleanUpDeformables()
+			inst.CleanUpDeformables()
 			nodes = queryNodesByStatus(src, NullState)
 			sort.Sort(db.Nodes(nodes))
 			g.Assert(len(nodes)).Equal(2)
@@ -111,17 +111,17 @@ func TestOnline(t *testing.T) {
 			//-------------has more deformables--------------------------------
 			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
 			// 1.find and mark deformable nodes
-			inst.FindAndMarkDeformables()
+			inst.MarkDeformables()
 			nodes = queryNodesByStatus(src, SplitNode)
 			g.Assert(len(nodes)).Equal(0)
 			// 2.mark valid nodes as collapsible
-			inst.FindAndMarkNullStateAsCollapsible()
+			inst.MarkNullStateAsCollapsible()
 			nodes = queryNodesByStatus(src, Collapsible)
 			g.Assert(len(nodes)).Equal(len(hulls) + 1)
 			// 3.find and split deformable nodes, set status as nullstate
-			inst.FindAndSplitDeformables()
+			inst.SplitDeformables()
 			//// 4.remove deformable nodes
-			inst.FindAndCleanUpDeformables()
+			inst.CleanUpDeformables()
 			nodes = queryNodesByStatus(src, NullState)
 			g.Assert(len(nodes)).Equal(0)
 

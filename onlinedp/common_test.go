@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS {{.Table}} (
     size INT CHECK (size > 0),
     fid INT NOT NULL,
     part INT NOT NULL,
-    gob TEXT NOT NULL,
+    node TEXT NOT NULL,
     geom GEOMETRY(Geometry, {{.SRID}}) NOT NULL,
     status INT DEFAULT 0,
     CONSTRAINT pid_{{.Table}} PRIMARY KEY (id),
@@ -106,7 +106,7 @@ func insertNodesIntoOnlineTable(src *db.DataSrc, nds []*db.Node) {
 
 func queryNodesByStatus(src *db.DataSrc, status int) []*db.Node{
 	var query = fmt.Sprintf(
-		`SELECT id, fid, gob FROM %v WHERE status=%v;`,
+		`SELECT id, fid, node FROM %v WHERE status=%v;`,
 		src.Table, status,
 	)
 	var h, err = src.Query(query)

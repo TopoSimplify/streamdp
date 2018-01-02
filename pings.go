@@ -3,6 +3,8 @@ package main
 import (
 	"simplex/db"
 	"simplex/streamdp/mtrafic"
+	"simplex/streamdp/common"
+	"log"
 )
 
 func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
@@ -29,9 +31,12 @@ func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 	}
 
 	if len(nds) > 0 {
-		var insertSQL = nds[0].InsertSQL(s.Config.Table, s.Config.SRID, nds...)
+		//var insertSQL = nds[0].InsertSQL(s.Config.Table, s.Config.SRID, nds...)
+		var vals = common.SnapshotNodeColumnValues(s.Src.SRID, nds...)
+		var insertSQL =  db.SQLInsertIntoTable(s.Src.Table, common.SnapNodeColumnFields, vals)
+
 		if _, err := s.Src.Exec(insertSQL); err != nil {
-			panic(err)
+			log.Panic(err)
 		}
 	}
 

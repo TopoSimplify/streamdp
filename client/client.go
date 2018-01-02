@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"fmt"
 	"flag"
 	"time"
@@ -8,11 +9,9 @@ import (
 	"math/rand"
 	"simplex/db"
 	"database/sql"
+	"path/filepath"
 	"simplex/streamdp/config"
 	"simplex/streamdp/common"
-	"path/filepath"
-	"log"
-	"simplex/streamdp/tbl"
 )
 
 var Port int
@@ -29,10 +28,9 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var pwd =  common.ExecutionDir()
+	var pwd = common.ExecutionDir()
 	var dataDir = filepath.Join(pwd, "../data")
 	var srcFile = filepath.Join(pwd, "../resource/src.toml")
 	var ignoreDirs = []string{".git", ".idea"}
@@ -58,7 +56,7 @@ func main() {
 		Dim:    serverCfg.Dim,
 		Table:  serverCfg.Table,
 	}
-	tbl.CreateOnlineTable(src, serverCfg)
+	db.CreateNodeTable(src)
 
 	//clear history
 	runProcess(ClearHistoryAddress)
