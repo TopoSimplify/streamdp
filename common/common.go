@@ -2,8 +2,10 @@ package common
 
 import (
 	"os"
+	"fmt"
 	"time"
 	"math/rand"
+	"simplex/db"
 	"simplex/ctx"
 	"simplex/node"
 	"path/filepath"
@@ -11,18 +13,15 @@ import (
 	"github.com/intdxdt/math"
 	"github.com/intdxdt/rtree"
 	"github.com/intdxdt/deque"
-	"simplex/db"
-	"fmt"
-	"simplex/streamdp/sandbox/s"
 )
 
 const (
-	UnSnap   = iota
+	UnSnap = iota
 	Snap
 )
-const EpsilonDist   = 1.0e-5
+const EpsilonDist = 1.0e-5
 
-func init(){
+func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -47,7 +46,6 @@ func SnapshotNodeColumnValues(srid int, nodes ...*db.Node) [][]string {
 	}
 	return vals
 }
-
 
 func SimpleTable(tbl string) string {
 	return fmt.Sprintf(`%v_simple`, tbl)
