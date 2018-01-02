@@ -26,9 +26,9 @@ func init() {
 }
 
 //Note : column fields corresponding to node.ColumnValues
-const SnapNodeColumnFields = "fid, node, geom, i, j, size, snapshot"
+const NodeColumnFields = "fid, node, geom, i, j, size, snapshot"
 
-func SnapshotNodeColumnValues(srid int, nodes ...*db.Node) [][]string {
+func SnapshotNodeColumnValues(srid int, snapStatus int,  nodes ...*db.Node) [][]string {
 	var colVals = func(n *db.Node) []string {
 		return []string{
 			fmt.Sprintf(`%v`, n.FID),
@@ -37,7 +37,7 @@ func SnapshotNodeColumnValues(srid int, nodes ...*db.Node) [][]string {
 			fmt.Sprintf(`%v`, n.Range.I),
 			fmt.Sprintf(`%v`, n.Range.J),
 			fmt.Sprintf(`%v`, n.Range.Size()),
-			fmt.Sprintf(`%v`, Snap),
+			fmt.Sprintf(`%v`, snapStatus),
 		}
 	}
 	var vals = make([][]string, 0)

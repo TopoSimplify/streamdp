@@ -5,6 +5,8 @@ import (
 	"simplex/streamdp/mtrafic"
 	"simplex/streamdp/common"
 	"log"
+	"time"
+	"fmt"
 )
 
 func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
@@ -32,16 +34,32 @@ func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 
 	if len(nds) > 0 {
 		//var insertSQL = nds[0].InsertSQL(s.Config.Table, s.Config.SRID, nds...)
-		var vals = common.SnapshotNodeColumnValues(s.Src.SRID, nds...)
-		var insertSQL =  db.SQLInsertIntoTable(s.Src.Table, common.SnapNodeColumnFields, vals)
-
+		var vals = common.SnapshotNodeColumnValues(s.Src.SRID, common.UnSnap, nds...)
+		var insertSQL = db.SQLInsertIntoTable(s.Src.Table, common.NodeColumnFields, vals)
 		if _, err := s.Src.Exec(insertSQL); err != nil {
 			log.Panic(err)
+		}
+
+		if !SimpleHistory.Get(id) {
+			SimpleHistory.Set(id)
+			go func() {
+				defer SimpleHistory.Done(id)
+				s.OnlineDP.Simplify(id)
+			}()
 		}
 	}
 
 	if !msg.KeepAlive {
 		VesselHistory.Delete(msg.Id)
+		go func() {
+			defer SimpleHistory.Done(id)
+			for SimpleHistory.Get(id) { //wait for current snapshort to complete
+				fmt.Println(">>> waiting for current snapshot")
+				time.Sleep(1 * time.Second)
+			}
+			s.OnlineDP.Simplify(id)
+			fmt.Println("<< done >>")
+		}()
 	}
 
 	return nil

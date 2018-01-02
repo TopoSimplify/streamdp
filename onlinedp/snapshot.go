@@ -9,7 +9,6 @@ import (
 	"simplex/streamdp/common"
 )
 
-
 func (self *OnlineDP) HasMoreDeformables(fid int) bool {
 	var query = fmt.Sprintf(`
 			SELECT id
@@ -57,7 +56,7 @@ func (self *OnlineDP) MarkNullStateAsCollapsible(fid int) {
 		Collapsible,
 		NullState, fid, common.Snap,
 	)
-	if  _, err := self.Src.Exec(query); err != nil {
+	if _, err := self.Src.Exec(query); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -175,8 +174,8 @@ func (self *OnlineDP) SplitDeformables(fid int) {
 	var worker = func(hull *db.Node) string {
 		if hull.Range.Size() > 1 {
 			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
-			var vals = common.SnapshotNodeColumnValues(self.Src.SRID, ha, hb)
-			return db.SQLInsertIntoTable(self.Src.Table, common.SnapNodeColumnFields, vals)
+			var vals = common.SnapshotNodeColumnValues(self.Src.SRID, common.Snap, ha, hb)
+			return db.SQLInsertIntoTable(self.Src.Table, common.NodeColumnFields, vals)
 		}
 		return hull.UpdateSQL(self.Src.Table, NullState)
 	}

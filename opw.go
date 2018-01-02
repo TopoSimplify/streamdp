@@ -10,6 +10,7 @@ import (
 	"simplex/streamdp/mtrafic"
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/offset"
+	"log"
 )
 
 type OPWType int
@@ -78,7 +79,7 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 		} else if self.Type == BOPW {
 			node = self.aggregateBOPW(index)
 		} else {
-			panic("unknown open window type")
+			log.Panic("unknown open window type")
 		}
 	}
 	return node

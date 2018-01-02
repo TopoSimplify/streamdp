@@ -102,10 +102,10 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 func (self *OnlineDP) updateMergeQuery(merge, hull, neighb *db.Node, queries *[]string) bool {
 	var merged = false
 	if self.ValidateMerge(merge, hull.Range, neighb.Range) {
-		var vals = common.SnapshotNodeColumnValues(self.Src.SRID, merge)
+		var vals = common.SnapshotNodeColumnValues(self.Src.SRID, common.Snap, merge)
 		*queries = append(*queries,
 			neighb.DeleteSQL(self.Src.Table),
-			db.SQLInsertIntoTable(self.Src.Table, common.SnapNodeColumnFields, vals),
+			db.SQLInsertIntoTable(self.Src.Table, common.NodeColumnFields, vals),
 		)
 		merged = true
 	}

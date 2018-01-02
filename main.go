@@ -16,6 +16,7 @@ const ReleaseMode = 0
 const Error = 500
 const Success = 200
 
+var SimpleHistory *SimpleMap
 var VesselHistory *History
 var Options *opts.Opts
 var SimplificationType = NOPW
@@ -23,6 +24,7 @@ var Offseter = offset.MaxOffset
 
 func init() {
 	VesselHistory = NewHistory()
+	SimpleHistory = NewSimpleMap()
 	Options = &opts.Opts{Threshold: 5000}
 	Offseter = offset.MaxOffset
 
@@ -33,8 +35,6 @@ func init() {
 func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
 	var server = NewServer("localhost:8000", DebugMode)
-
 	server.Run()
 }
