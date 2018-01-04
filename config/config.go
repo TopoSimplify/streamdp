@@ -1,11 +1,11 @@
 package config
 
 import (
+	"log"
 	"simplex/db"
 	"simplex/opts"
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
-	"log"
 )
 
 type Server struct {

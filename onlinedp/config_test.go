@@ -1,11 +1,11 @@
 package onlinedp
 
 import (
+	"log"
 	"simplex/db"
 	"simplex/opts"
 	"github.com/naoina/toml"
 	"github.com/intdxdt/fileutil"
-	"log"
 )
 
 func loadConfig(filename string) *ServerConfig {

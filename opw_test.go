@@ -14,9 +14,8 @@ func generatePings(size int) []*mtrafic.Ping {
 	var t = time.Now()
 	var pts = make([]*mtrafic.Ping, 0)
 	for i := 0; i < size; i++ {
-		v := float64(i)
 		t = t.Add(1 * time.Second)
-		pts = append(pts, &mtrafic.Ping{X: v, Y: 0, Time: t})
+		pts = append(pts, &mtrafic.Ping{X: float64(i), Y: 0, Time: t})
 	}
 	return pts
 }

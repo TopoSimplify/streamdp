@@ -23,13 +23,13 @@ func (self *OnlineDP) AggregateSimpleSegments(fid, fragmentSize int) {
 	for nidIter.Next() {
 		var nid int
 		nidIter.Scan(&nid)
-		self.processNodeFragment(nid)
+		self.processNodeFragment(fid, nid)
 	}
 }
 
-func (self *OnlineDP) processNodeFragment(nid int) {
+func (self *OnlineDP) processNodeFragment(fid, nid int) {
 	var query = fmt.Sprintf(`
-			SELECT id, fid, node
+			SELECT id, node
 			FROM %v
 			WHERE id=%v;
 		`,
@@ -41,9 +41,10 @@ func (self *OnlineDP) processNodeFragment(nid int) {
 		log.Panic(err)
 	}
 	for h.Next() {
+		var id int
 		var gob string
-		var id, fid int
-		h.Scan(&id, &fid, &gob)
+
+		h.Scan(&id, &gob)
 		var o = db.Deserialize(gob)
 		o.NID, o.FID = id, fid
 
@@ -55,6 +56,9 @@ func (self *OnlineDP) processNodeFragment(nid int) {
 			}
 		}
 	}
+
+	//mark any merges as collapsible
+	self.MarkNullStateAsCollapsible(fid)
 }
 
 func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {

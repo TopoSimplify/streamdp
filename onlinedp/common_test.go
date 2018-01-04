@@ -1,9 +1,11 @@
 package onlinedp
 
 import (
+	"time"
 	"log"
 	"fmt"
 	"bytes"
+	"math/rand"
 	"simplex/db"
 	"simplex/dp"
 	"simplex/rng"
@@ -11,11 +13,8 @@ import (
 	"simplex/node"
 	"text/template"
 	"github.com/intdxdt/geom"
-	"math/rand"
-	"time"
+	"simplex/streamdp/common"
 )
-
-
 
 const ServerCfg = "/home/titus/01/godev/src/simplex/streamdp/test/src.toml"
 
@@ -63,14 +62,14 @@ func linearCoords(wkt string) []*geom.Point {
 	return geom.NewLineStringFromWKT(wkt).Coordinates()
 }
 
-func createNodes(indxs [][]int, coords []*geom.Point)  []*db.Node{
+func createNodes(indxs [][]int, coords []*geom.Point) []*db.Node {
 	poly := pln.New(coords)
 	hulls := make([]*db.Node, 0)
 	var fid = rand.Intn(100)
 	for _, o := range indxs {
 		var r = rng.NewRange(o[0], o[1])
 		//var dpnode = newNodeFromPolyline(poly, r, dp.NodeGeometry)
-		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, 0, dp.NodeGeometry, "x7")
+		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, dp.NodeGeometry, "x7")
 		hulls = append(hulls, n)
 	}
 	return hulls
@@ -97,14 +96,14 @@ func createOnlineTable(src *db.DataSrc, cfg *ServerConfig) error {
 }
 
 func insertNodesIntoOnlineTable(src *db.DataSrc, nds []*db.Node) {
-	var insertSQL = nds[0].InsertSQL(src.Config.Table, src.SRID, nds...)
+	var vals = common.SnapshotNodeColumnValues(src.SRID, common.UnSnap, nds...)
+	var insertSQL = db.SQLInsertIntoTable(src.Table, common.NodeColumnFields, vals)
 	if _, err := src.Exec(insertSQL); err != nil {
 		panic(err)
 	}
 }
 
-
-func queryNodesByStatus(src *db.DataSrc, status int) []*db.Node{
+func queryNodesByStatus(src *db.DataSrc, status int) []*db.Node {
 	var query = fmt.Sprintf(
 		`SELECT id, fid, node FROM %v WHERE status=%v;`,
 		src.Table, status,

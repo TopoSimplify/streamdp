@@ -10,17 +10,16 @@ import (
 var Port int
 var Host string
 
+const DebugMode     = 0
+const ReleaseMode   = 0
+const Error         = 500
+const Success       = 200
 
-const DebugMode = 0
-const ReleaseMode = 0
-const Error = 500
-const Success = 200
-
-var SimpleHistory *SimpleMap
-var VesselHistory *History
-var Options *opts.Opts
-var SimplificationType = NOPW
-var Offseter = offset.MaxOffset
+var SimpleHistory   *SimpleMap
+var VesselHistory   *History
+var Options         *opts.Opts
+var SimplificationType  = NOPW
+var Offseter            = offset.MaxOffset
 
 func init() {
 	VesselHistory = NewHistory()

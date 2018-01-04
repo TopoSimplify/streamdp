@@ -11,6 +11,7 @@ import (
 	"simplex/opts"
 	"simplex/streamdp/offset"
 	"github.com/franela/goblin"
+	"simplex/streamdp/common"
 )
 
 func TestOnline(t *testing.T) {
@@ -18,6 +19,7 @@ func TestOnline(t *testing.T) {
 	g.Describe("test online", func() {
 		g.It("should test online", func() {
 			g.Timeout(1 * time.Hour)
+
 			var coords = linearCoords("LINESTRING ( 780 600, 760 610, 740 620, 720 660, 720 700, 760 740, 820 760, 860 740, 880 720, 900 700, 880 660, 840 680, 820 700, 800 720, 760 710, 780 660, 820 640, 840 620, 860 580, 880 620, 830 660 )")
 			var intRanges = [][]int{
 				{0, 2}, {2, 4}, {4, 9}, {9, 14},
@@ -50,17 +52,21 @@ func TestOnline(t *testing.T) {
 				MinDist:                0,
 				AvoidNewSelfIntersects: true,
 			}
-			var inst = NewOnlineDP(src, nil, options, offset.MaxOffset, true, )
+			var inst = NewOnlineDP(src, nil, options, offset.MaxOffset, true)
 			g.Assert(inst != nil).IsTrue()
 			g.Assert(inst.ScoreRelation(78)).IsTrue()
 			g.Assert(inst.ScoreRelation(109)).IsFalse()
 
 			//create online table
-			err = createOnlineTable(src, serverCfg)
+			err = db.CreateNodeTable(src)
 			g.Assert(err == nil).IsTrue()
 			insertNodesIntoOnlineTable(src, hulls)
 
-			//-------------------deformation----------------------------------------------
+			//-------------------snap----------------------------------------------
+			inst.MarkSnapshot(fid, common.Snap)
+			defer inst.MarkSnapshot(fid, common.UnSnap)
+			//-------------------deformation---------------------------------------
+
 			g.Assert(len(inst.selectDeformable(hulls[0]))).Equal(0)
 			g.Assert(len(inst.selectDeformable(hulls[1]))).Equal(0)
 			g.Assert(len(inst.selectDeformable(hulls[len(hulls)-1]))).Equal(0)
@@ -77,6 +83,7 @@ func TestOnline(t *testing.T) {
 			g.Assert(neighbs[0].Range.Equals(hulls[1].Range)).IsTrue()
 			g.Assert(neighbs[1].Range.Equals(hulls[3].Range)).IsTrue()
 			g.Assert(neighbs[2].Range.Equals(hulls[4].Range)).IsTrue()
+
 			//----------------------self-inters-------------------------------------------
 			var sideEffects = make([]*db.Node, 0)
 			// self intersection constraint
@@ -90,18 +97,21 @@ func TestOnline(t *testing.T) {
 			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
 			//----------------------simplify-------------------------------------------
 			// 1.find and mark deformable nodes
-			inst.MarkDeformables()
+			inst.MarkDeformables(fid)
 			var nodes = queryNodesByStatus(src, SplitNode)
 			g.Assert(len(nodes)).Equal(1)
 			g.Assert(nodes[0].Range.Equals(hulls[2].Range)).IsTrue()
-			// 2.mark valid nodes as collapsible
-			inst.MarkNullStateAsCollapsible()
+
+			//2.mark valid nodes as collapsible
+			inst.MarkNullStateAsCollapsible(fid)
 			nodes = queryNodesByStatus(src, Collapsible)
 			g.Assert(len(nodes)).Equal(len(hulls) - 1)
-			// 3.find and split deformable nodes, set status as nullstate
-			inst.SplitDeformables()
-			//// 4.remove deformable nodes
-			inst.CleanUpDeformables()
+
+			//3.find and split deformable nodes, set status as nullstate
+			inst.SplitDeformables(fid)
+
+			//4.remove deformable nodes
+			inst.CleanUpDeformables(fid)
 			nodes = queryNodesByStatus(src, NullState)
 			sort.Sort(db.Nodes(nodes))
 			g.Assert(len(nodes)).Equal(2)
@@ -110,23 +120,27 @@ func TestOnline(t *testing.T) {
 
 			//-------------has more deformables--------------------------------
 			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()
-			// 1.find and mark deformable nodes
-			inst.MarkDeformables()
+
+			//1.find and mark deformable nodes
+			inst.MarkDeformables(fid)
 			nodes = queryNodesByStatus(src, SplitNode)
 			g.Assert(len(nodes)).Equal(0)
-			// 2.mark valid nodes as collapsible
-			inst.MarkNullStateAsCollapsible()
+
+			//2.mark valid nodes as collapsible
+			inst.MarkNullStateAsCollapsible(fid)
 			nodes = queryNodesByStatus(src, Collapsible)
 			g.Assert(len(nodes)).Equal(len(hulls) + 1)
-			// 3.find and split deformable nodes, set status as nullstate
-			inst.SplitDeformables()
-			//// 4.remove deformable nodes
-			inst.CleanUpDeformables()
+
+			//3.find and split deformable nodes, set status as nullstate
+			inst.SplitDeformables(fid)
+
+			//4.remove deformable nodes
+			inst.CleanUpDeformables(fid)
 			nodes = queryNodesByStatus(src, NullState)
 			g.Assert(len(nodes)).Equal(0)
 
-			inst.FindAndProcessSimpleSegments(1)
-			inst.FindAndProcessSimpleSegments(2)
+			inst.AggregateSimpleSegments(fid, 1)
+			inst.AggregateSimpleSegments(fid, 2)
 		})
 	})
 }
