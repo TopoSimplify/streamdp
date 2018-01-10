@@ -22,6 +22,12 @@ const (
 	MaximumCacheLimit = 300
 )
 
+const (
+	AtAnchor = 1
+	Moored   = 5
+	Aground  = 6
+)
+
 //SimplificationType OPW
 type OPW struct {
 	Id            int
@@ -65,9 +71,20 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	if self.cache.size() > 0 {
 		I = self.cache.lastIndex() + 1
 	}
+
+	var bln = (self.cache.size() > 0) && self.cache.last().Point.Equals2D(pnt)
+
+	if bln ||
+		ping.Status == AtAnchor ||
+		ping.Status == Moored ||
+		ping.Status == Aground {
+		return node
+	}
+
 	self.cache.append(&pt.Pt{
 		Point: pnt, Ping: ping, I: I,
 	})
+
 	if self.cache.size() < MinimumCacheLimit {
 		return node
 	}
@@ -177,7 +194,7 @@ func (self *OPW) createNode() *db.Node {
 	return db.NewDBNode(
 		self.cacheAsPoints(),
 		rng.NewRange(self.anchor, self.float),
-		self.Id,NodeGeometry,
+		self.Id, NodeGeometry,
 	)
 }
 

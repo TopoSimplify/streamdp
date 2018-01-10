@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"flag"
 	"time"
-	"runtime"
 	"math/rand"
 	"simplex/db"
 	"database/sql"
 	"path/filepath"
 	"simplex/streamdp/config"
 	"simplex/streamdp/common"
+	"runtime"
 )
 
 var Port int
@@ -41,11 +41,11 @@ func main() {
 
 	var serverCfg = (&config.Server{}).Load(srcFile)
 	var dbCfg = serverCfg.DBConfig()
-
-	var sqlsrc, err = sql.Open("postgres", fmt.Sprintf(
+	var connSettings = fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
 		dbCfg.User, dbCfg.Password, dbCfg.Database,
-	))
+	)
+	var sqlsrc, err = sql.Open("postgres", connSettings)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -60,6 +60,7 @@ func main() {
 
 	//clear history
 	runProcess(ClearHistoryAddress)
+
 	//vessel pings
 	vesselPings(dataDir, filter, ignoreDirs, concurProcs)
 	//simplify

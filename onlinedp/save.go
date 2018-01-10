@@ -21,13 +21,11 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 		FROM %v
 		WHERE fid=%v AND snapshot=%v
 		ORDER BY fid asc, i asc;
-	`,
-		self.Src.Table,
-		fid, common.Snap,
+	`, self.Src.Table, fid, common.Snap,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	var gob string
@@ -65,9 +63,13 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 		}
 	}
 
+	if len(coordinates) == 0 {
+		return
+	}
+	var n = len(coordinates) - 1
 	var buf bytes.Buffer
 	buf.WriteString("MULTILINESTRING (")
-	var n = len(coordinates) - 1
+
 	for i, coords := range coordinates {
 		var sub = make([]*geom.Point, len(coords))
 		for idx, o := range coords {
@@ -85,20 +87,37 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 
 	//fmt.Println(wkt)
 	var geomFromTxt = fmt.Sprintf(
-		`st_geomfromtext('%v', %v)`,
-		wkt, self.Src.SRID,
+		`st_geomfromtext('%v', %v)`, wkt, self.Src.SRID,
 	)
+	var count = self.numberOfUpdates(outputTable, fid) + 1
+	//var count = 0
 	query = fmt.Sprintf(`
-		INSERT INTO %v (id, geom)
-		VALUES (%v, %v)
+		INSERT INTO %v (id, geom, count)
+		VALUES (%v, %v, %v)
 		ON CONFLICT (id)
-			DO UPDATE SET geom = %v;
+			DO UPDATE SET geom=%v, count=%v;
 		`,
-		outputTable, fid, geomFromTxt, geomFromTxt,
+		outputTable, fid, geomFromTxt, count, geomFromTxt, count,
 	)
 
 	_, err = self.Src.Exec(query)
 	if err != nil {
 		log.Panic(err)
 	}
+}
+
+func (self *OnlineDP) numberOfUpdates(tbl string, fid int) int {
+	var query = fmt.Sprintf(`
+		SELECT count FROM %v WHERE id=%v;
+	`, tbl, fid)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		log.Panic(err)
+	}
+	var count int
+	for h.Next() {
+		h.Scan(&count)
+		return count
+	}
+	return count
 }

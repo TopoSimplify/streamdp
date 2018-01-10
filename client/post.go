@@ -15,12 +15,12 @@ func postToServer(token string, mmsi int, keepAlive bool) {
 	var msg, err = json.Marshal(pmsg)
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	_, err = post(Address, msg)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
 

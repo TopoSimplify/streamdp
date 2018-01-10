@@ -12,9 +12,7 @@ type History struct {
 }
 
 func NewHistory() *History {
-	return &History{
-		m: make(map[int]*OPW, 0),
-	}
+	return &History{m: make(map[int]*OPW, 0)}
 }
 
 func (h *History) Get(id int) *OPW {

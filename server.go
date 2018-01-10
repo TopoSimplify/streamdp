@@ -18,7 +18,11 @@ import (
 
 func NewServer(address string, mode int) *Server {
 	var pwd = common.ExecutionDir()
-	var server = &Server{Address: address, Mode: mode, Config: &config.Server{}}
+	var server = &Server{
+		Address: address,
+		Mode:    mode,
+		Config:  &config.Server{},
+	}
 	var fname = filepath.Join(pwd, "../resource/src.toml")
 	server.Config.Load(fname)
 
@@ -79,8 +83,8 @@ func (s *Server) init() {
 
 	var dpOpts = s.Config.DPOptions()
 	s.OnlineDP = onlinedp.NewOnlineDP(
-		s.Src, s.ConstSrc, dpOpts,
-		offset.MaxOffset, true,
+		s.Src, s.ConstSrc, dpOpts, offset.MaxOffset,
+		true,
 	)
 
 	//create online table
@@ -88,13 +92,14 @@ func (s *Server) init() {
 		log.Panic(err)
 	}
 
-	var simpleTable = fmt.Sprintf(`%v_simple`, s.Src.Table)
-	fmt.Println("simple : ", simpleTable)
+	var simpleTable = common.SimpleTable(s.Src.Table)
+
 	var query = fmt.Sprintf(`
 		DROP TABLE IF EXISTS %v CASCADE;
 		CREATE TABLE IF NOT EXISTS %v (
 		    id          INT NOT NULL,
 		    geom        GEOMETRY(Geometry, %v) NOT NULL,
+			count       INT NOT NULL,
 		    CONSTRAINT  pid_%v PRIMARY KEY (id)
 		) WITH (OIDS=FALSE);`,
 		simpleTable,
@@ -127,7 +132,7 @@ func (s *Server) trafficRouter(ctx *gin.Context) {
 	var err = ctx.BindJSON(msg)
 
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 		ctx.JSON(Error, gin.H{"message": "error"})
 		return
 	}

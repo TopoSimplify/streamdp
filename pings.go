@@ -1,12 +1,12 @@
 package main
 
 import (
-	"simplex/db"
-	"simplex/streamdp/mtrafic"
-	"simplex/streamdp/common"
 	"log"
-	"time"
 	"fmt"
+	"time"
+	"simplex/db"
+	"simplex/streamdp/common"
+	"simplex/streamdp/mtrafic"
 )
 
 func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
@@ -19,13 +19,16 @@ func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 			return err
 		}
 
-		id = int(ping.MMSI)
-		if n := VesselHistory.Update(id, ping); n != nil {
-			nds = append(nds, n)
+		id = ping.MMSI
+		var node = VesselHistory.Update(id, ping)
+		//node
+		if node != nil {
+			nds = append(nds, node)
 		}
 	} else if !msg.KeepAlive {
 		id = msg.Id
-		for _, n := range VesselHistory.MarkDone(id) {
+		var nodes = VesselHistory.MarkDone(id)
+		for _, n := range  nodes {
 			if n != nil {
 				nds = append(nds, n)
 			}
@@ -40,6 +43,7 @@ func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 			log.Panic(err)
 		}
 
+		//if not running simplify in background - start one
 		if !SimpleHistory.Get(id) {
 			SimpleHistory.Set(id)
 			go func() {
@@ -55,7 +59,7 @@ func (s *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 			defer SimpleHistory.Done(id)
 			for SimpleHistory.Get(id) { //wait for current snapshort to complete
 				fmt.Println(">>> waiting for current snapshot")
-				time.Sleep(1 * time.Second)
+				time.Sleep(3 * time.Second)
 			}
 			s.OnlineDP.Simplify(id)
 			fmt.Println("<< done >>")

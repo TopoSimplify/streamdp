@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 	"fmt"
-	"sync"
 	"time"
+	"sync"
 	"spinner"
-	"simplex/streamdp/mtrafic"
+	"simplex/data/store"
 	"github.com/intdxdt/fan"
+	"simplex/streamdp/mtrafic"
 	"github.com/intdxdt/fileglob"
 )
 
@@ -29,6 +30,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 		if err != nil {
 			log.Fatalln(err)
 		}
+
 		for _, o := range vessels {
 			datafileStream <- o
 		}
@@ -37,43 +39,38 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 
 	var worker = func(v interface{}) interface{} {
 		var filepath = v.(string)
-		return mtrafic.ReadMMSIToml(filepath)
+		return mtrafic.ReadMTraj(filepath)
 	}
-	var dataSourceStream = fan.Stream(datafileStream, worker, concurProcs, exit)
+
+	var dataSourceStream = fan.Stream(
+		datafileStream, worker, concurProcs, exit,
+	)
 
 	var done = make(chan struct{})
 
-	vessel := func(v *mtrafic.Vessel, wg *sync.WaitGroup) {
-		var id = -9
-		var expected = len(v.Trajectory)
+	vessel := func(v *store.MTraj, wg *sync.WaitGroup) {
+		var id = v.MMSI
+		var expected = len(v.Traj)
 		var count = 0
 
-		for _, loc := range v.Trajectory {
-			dtm, err := time.Parse(time.RFC3339, loc.Time)
-			if err != nil {
-				panic(err)
-			}
-
+		for _, loc := range v.Traj {
 			ping := mtrafic.Ping{
-				MMSI:   v.MMSI,
-				Type:   v.Type,
-				Course: loc.Course,
-				Time:   dtm,
+				MMSI:   id,
+				Time:   loc.Time,
 				X:      loc.X,
 				Y:      loc.Y,
 				Speed:  loc.Speed,
+				Status: loc.Status,
 			}
 
 			token, err := mtrafic.Serialize(ping)
 			if err != nil {
-				panic(err)
+				log.Panic(err)
 			}
 
-			if id < 0 {
-				id = int(ping.MMSI)
-			}
 			postToServer(token, id, true)
 			count += 1
+			time.Sleep(1 * time.Second)
 		}
 
 		postToServer("", id, false)
@@ -87,7 +84,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	//now expand one worker into clones of workers
 	go func() {
 		defer close(done)
-		var buf = make([]*mtrafic.Vessel, 0)
+		var buf = make([]*store.MTraj, 0)
 
 		var flush = func() {
 			var wg = &sync.WaitGroup{}
@@ -95,12 +92,12 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 			for _, v := range buf {
 				go vessel(v, wg)
 			}
-			buf = make([]*mtrafic.Vessel, 0)
+			buf = make([]*store.MTraj, 0)
 			wg.Wait()
 		}
 
 		for vs := range dataSourceStream {
-			buf = append(buf, vs.(*mtrafic.Vessel))
+			buf = append(buf, vs.(*store.MTraj))
 			if len(buf) >= batchSize {
 				flush()
 			}
