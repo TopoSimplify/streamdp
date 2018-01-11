@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"encoding/json"
 	"simplex/streamdp/mtrafic"
+	"github.com/pkg/errors"
 )
 
 //post to server
@@ -38,10 +39,10 @@ func post(address string, msg []byte) ([]byte, error) {
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if resp != nil {
+	if resp != nil  {
+		body, err := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
+		return body, err
 	}
-
-	return body, err
+	return []byte{}, errors.New("invalid response")
 }

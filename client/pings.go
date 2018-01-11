@@ -17,6 +17,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 	var datafileStream = make(chan interface{})
 	var exit = make(chan struct{})
 	defer close(exit)
+
 	fmt.Println("\033c")
 	go func() {
 		var s = spinner.NewSpinner("vessel pings ...", exit)
@@ -70,7 +71,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 
 			postToServer(token, id, true)
 			count += 1
-			time.Sleep(1 * time.Second)
+			time.Sleep(60 * time.Millisecond)
 		}
 
 		postToServer("", id, false)

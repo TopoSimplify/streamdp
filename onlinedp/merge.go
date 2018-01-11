@@ -10,7 +10,7 @@ import (
 
 //Merge contiguous fragments based combined score
 func (self *OnlineDP) ContiguousFragmentsAtThreshold(
-	scoreFn ScoreFn, ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
+	scoreFn func([]*geom.Point) (int, float64), ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
 
 	if !ha.Range.Contiguous(hb.Range) {
 		log.Panic("node are not contiguous")

@@ -1,19 +1,22 @@
 package main
 
 import (
+	"log"
 	"sort"
 	"simplex/db"
 	"simplex/lnr"
 	"simplex/rng"
 	"simplex/opts"
 	"simplex/streamdp/pt"
-	"simplex/streamdp/mtrafic"
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/offset"
-	"log"
+	"simplex/streamdp/mtrafic"
 )
 
 type OPWType int
+
+var ScoreFn = offset.MaxSEDOffset
+var OPWScoreFn = offset.OPWMaxSEDOffset
 
 const (
 	NOPW              OPWType = iota
@@ -72,12 +75,23 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 		I = self.cache.lastIndex() + 1
 	}
 
-	var bln = (self.cache.size() > 0) && self.cache.last().Point.Equals2D(pnt)
+	var last *pt.Pt
+	if self.cache.size() > 0 {
+		last = self.cache.last()
+	}
+	var rmBool = (ping.Status == AtAnchor) ||
+		(ping.Status == Moored) || (ping.Status == Aground)
 
-	if bln ||
-		ping.Status == AtAnchor ||
-		ping.Status == Moored ||
-		ping.Status == Aground {
+	var eqBool = (last != nil) && last.Point.Equals2D(pnt)
+
+	if last != nil {
+		var rm = (last.Ping.Status == AtAnchor) ||
+			(last.Ping.Status == Moored  ) ||
+			(last.Ping.Status == Aground )
+		rmBool = rmBool && rm
+	}
+
+	if eqBool || rmBool {
 		return node
 	}
 
@@ -89,7 +103,8 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 		return node
 	}
 
-	var index, val = offset.OPWMaxSEDOffset(self.cache)
+	var index, val = OPWScoreFn(self.cache)
+
 	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)

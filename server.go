@@ -11,17 +11,39 @@ import (
 	"simplex/streamdp/mtrafic"
 	"gopkg.in/gin-gonic/gin.v1"
 	"simplex/streamdp/onlinedp"
-	"simplex/streamdp/offset"
 	"simplex/streamdp/config"
 	"simplex/streamdp/common"
 )
 
+const (
+	InputBufferSize = 3
+)
+
+type Server struct {
+	Config       *config.Server
+	Address      string
+	Mode         int
+	Src          *db.DataSrc
+	ConstSrc     *db.DataSrc
+	OnlineDP     *onlinedp.OnlineDP
+	InputStream  chan []*db.Node
+	SimpleStream chan []int
+	Exit         chan struct{}
+}
+
 func NewServer(address string, mode int) *Server {
 	var pwd = common.ExecutionDir()
+	var exit = make(chan struct{})
+	var inputStream = make(chan []*db.Node, InputBufferSize)
+	var simpleStream = make(chan []int)
+
 	var server = &Server{
-		Address: address,
-		Mode:    mode,
-		Config:  &config.Server{},
+		Address:      address,
+		Mode:         mode,
+		Config:       &config.Server{},
+		InputStream:  inputStream,
+		SimpleStream: simpleStream,
+		Exit:         exit,
 	}
 	var fname = filepath.Join(pwd, "../resource/src.toml")
 	server.Config.Load(fname)
@@ -44,55 +66,48 @@ func NewServer(address string, mode int) *Server {
 		Table:  server.Config.Table,
 	}
 	server.ConstSrc = db.NewDataSrc(filepath.Join(pwd, "../resource/consts.toml"))
+
+	var dpOpts = server.Config.DPOptions()
+	server.OnlineDP = onlinedp.NewOnlineDP(
+		server.Src, server.ConstSrc, dpOpts,
+		ScoreFn, true,
+	)
 	return server
 }
 
-type Server struct {
-	Config   *config.Server
-	Address  string
-	Mode     int
-	Src      *db.DataSrc
-	ConstSrc *db.DataSrc
-	OnlineDP *onlinedp.OnlineDP
-}
-
-func (s *Server) Run() {
-	s.init()
+func (server *Server) Run() {
+	server.init()
 
 	var router = gin.Default()
-	if s.Mode == 0 {
+	if server.Mode == 0 {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router.POST("/ping", s.trafficRouter)
-	router.POST("/history/clear", s.clearHistory)
-	router.POST("/simplify", s.clearHistory)
-	router.Run(s.Address)
+	router.POST("/ping", server.trafficRouter)
+	router.POST("/history/clear", server.clearHistory)
+	router.POST("/simplify", server.clearHistory)
+	router.Run(server.Address)
 }
 
-func (s *Server) init() {
-	var simpleType = strings.ToLower(s.Config.SimplficationType)
+func (server *Server) init() {
+	var simpleType = strings.ToLower(server.Config.SimplficationType)
 
 	if simpleType == "nopw" {
 		SimplificationType = NOPW
 	} else if simpleType == "bopw" {
 		SimplificationType = BOPW
+	} else {
+		log.Panic("unknown simplification type: NOPW or BOPW")
 	}
 
-	var dpOpts = s.Config.DPOptions()
-	s.OnlineDP = onlinedp.NewOnlineDP(
-		s.Src, s.ConstSrc, dpOpts, offset.MaxOffset,
-		true,
-	)
-
 	//create online table
-	if err := db.CreateNodeTable(s.Src); err != nil {
+	if err := db.CreateNodeTable(server.Src); err != nil {
 		log.Panic(err)
 	}
 
-	var simpleTable = common.SimpleTable(s.Src.Table)
+	var simpleTable = common.SimpleTable(server.Src.Table)
 
 	var query = fmt.Sprintf(`
 		DROP TABLE IF EXISTS %v CASCADE;
@@ -104,20 +119,25 @@ func (s *Server) init() {
 		) WITH (OIDS=FALSE);`,
 		simpleTable,
 		simpleTable,
-		s.Src.SRID,
+		server.Src.SRID,
 		simpleTable,
 	)
 
-	if _, err := s.Src.Exec(query); err != nil {
+	if _, err := server.Src.Exec(query); err != nil {
 		log.Panic(err)
 	}
+
 	//o.Src.DuplicateTable(outputTable)
-	s.Src.AlterAsMultiLineString(
-		simpleTable, s.Src.Config.GeometryColumn, s.Src.SRID,
+	server.Src.AlterAsMultiLineString(
+		simpleTable, server.Src.Config.GeometryColumn, server.Src.SRID,
 	)
+
+	//launch input stream processing
+	go server.goProcessInputStream()
+	go server.goProcessSimpleStream()
 }
 
-func (s *Server) clearHistory(ctx *gin.Context) {
+func (server *Server) clearHistory(ctx *gin.Context) {
 	VesselHistory.Clear()
 	ctx.JSON(Success, gin.H{"message": "success"})
 }
@@ -127,7 +147,7 @@ func (s *Server) clearHistory(ctx *gin.Context) {
 //	ctx.JSON(Success, gin.H{"message": "success"})
 //}
 
-func (s *Server) trafficRouter(ctx *gin.Context) {
+func (server *Server) trafficRouter(ctx *gin.Context) {
 	var msg = &mtrafic.PingMsg{}
 	var err = ctx.BindJSON(msg)
 
@@ -137,7 +157,7 @@ func (s *Server) trafficRouter(ctx *gin.Context) {
 		return
 	}
 
-	err = s.aggregatePings(msg)
+	err = server.aggregatePings(msg)
 	if err == nil {
 		ctx.JSON(Success, gin.H{"message": "success"})
 	} else {

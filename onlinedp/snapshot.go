@@ -80,12 +80,11 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 	defer self.tempDropTable(temp)
 
 	var query = fmt.Sprintf(`
-			SELECT id, node
-			FROM  %v
-			WHERE status=%v AND fid=%v AND snapshot=%v;
+		SELECT id, node
+		FROM  %v
+		WHERE status=%v AND fid=%v AND snapshot=%v;
 		`,
-		self.Src.Table,
-		NullState, fid, common.Snap,
+		self.Src.Table, NullState, fid, common.Snap,
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {

@@ -8,12 +8,15 @@ import (
 
 //split hull at vertex with
 //maximum_offset offset -- k
-func AtScoreSelection(hull *db.Node, scoreFn ScoreFn, gfn geom.GeometryFn) (*db.Node, *db.Node) {
+func AtScoreSelection(hull *db.Node, scoreFn func([]*geom.Point) (int, float64),
+	gfn geom.GeometryFn) (*db.Node, *db.Node) {
+
 	var coordinates = hull.Coordinates
 	var rg = hull.Range
 	var i, j = rg.I, rg.J
 	var k, _ = scoreFn(coordinates)
 	var rk = rg.Index(k)
+
 	// ------------------------------------------------------------------------------------
 	var fid = hull.FID
 	var idA, idB = hull.SubNodeIds()
@@ -21,6 +24,7 @@ func AtScoreSelection(hull *db.Node, scoreFn ScoreFn, gfn geom.GeometryFn) (*db.
 	var ha = db.NewDBNode(coordinates[0:k+1], rng.NewRange(i, rk), fid, gfn, idA)
 	var hb = db.NewDBNode(coordinates[k:], rng.NewRange(rk, j), fid, gfn, idB)
 	// ------------------------------------------------------------------------------------
+
 	return ha, hb
 }
 
