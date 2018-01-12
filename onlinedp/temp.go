@@ -86,6 +86,7 @@ func (self *OnlineDP) tempExecuteQueries(tempQ string) {
 	if err != nil {
 		panic(err)
 	}
+	defer h.Close()
 
 	const bufferSize = 100
 	var q string

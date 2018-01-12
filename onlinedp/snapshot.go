@@ -19,10 +19,13 @@ func (self *OnlineDP) HasMoreDeformables(fid int) bool {
 		self.Src.Table,
 		NullState, fid, common.Snap,
 	)
+
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
+
 	var bln = false
 	for h.Next() {
 		bln = true
@@ -86,10 +89,12 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 		`,
 		self.Src.Table, NullState, fid, common.Snap,
 	)
+
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	for h.Next() {
 		var id int
@@ -111,11 +116,12 @@ func (self *OnlineDP) MarkNullState(temp string) {
 	const bufferSize = 200
 	var buf = make([]int, 0)
 	var query = fmt.Sprintf(`SELECT id  FROM  %v;`, temp)
-	var h, err = self.Src.Query(query)
 
+	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	var id int
 	for h.Next() {
@@ -184,13 +190,14 @@ func (self *OnlineDP) SplitDeformables(fid int) {
 			FROM  %v
 			WHERE status=%v AND fid=%v AND snapshot=%v;
 		`,
-		self.Src.Table,
-		SplitNode, fid, common.Snap,
+		self.Src.Table, SplitNode, fid, common.Snap,
 	)
+
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	var bufferSize = 100
 	var buf = make([]string, 0)

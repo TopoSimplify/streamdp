@@ -108,10 +108,13 @@ func queryNodesByStatus(src *db.DataSrc, status int) []*db.Node {
 		`SELECT id, fid, node FROM %v WHERE status=%v;`,
 		src.Table, status,
 	)
+
 	var h, err = src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
+
 	var id, fid int
 	var gob string
 	var nodes = make([]*db.Node, 0)

@@ -27,6 +27,7 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	var gob string
 	var coordinates = make([][]*pt.Pt, 0)
@@ -110,10 +111,13 @@ func (self *OnlineDP) numberOfUpdates(tbl string, fid int) int {
 	var query = fmt.Sprintf(`
 		SELECT count FROM %v WHERE id=%v;
 	`, tbl, fid)
+
 	var h, err = self.Src.Query(query)
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
+
 	var count int
 	for h.Next() {
 		h.Scan(&count)

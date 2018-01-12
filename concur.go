@@ -56,11 +56,6 @@ func (server *Server) goProcessSimpleStream() {
 			server.createSimpleIdTable()
 			server.copyIdsIntoSimpleIdTable()
 
-			var query = fmt.Sprintf("SELECT fid FROM %v;", simpleIdTable)
-			var h, err = server.Src.Query(query)
-			if err != nil {
-				log.Panic(err)
-			}
 
 			var buf = make([]int, 0)
 
@@ -74,7 +69,7 @@ func (server *Server) goProcessSimpleStream() {
 				var exit = make(chan struct{})
 				defer close(exit)
 
-				var msg  = fmt.Sprintf("processing ... %v", n)
+				var msg = fmt.Sprintf("processing ... %v", n)
 				spinner.NewSpinner(msg, exit).Start()
 
 				var wg = &sync.WaitGroup{}
@@ -87,6 +82,13 @@ func (server *Server) goProcessSimpleStream() {
 			}
 
 			var bln bool
+
+			var query = fmt.Sprintf("SELECT fid FROM %v;", simpleIdTable)
+			var h, err = server.Src.Query(query)
+			if err != nil {
+				log.Panic(err)
+			}
+
 			for h.Next() {
 				bln = true
 				var fid int
@@ -96,6 +98,8 @@ func (server *Server) goProcessSimpleStream() {
 					flush()
 				}
 			}
+			//close handler
+			h.Close()
 
 			//flush
 			if len(buf) > 0 {
@@ -144,6 +148,8 @@ func (server *Server) copyIdsIntoSimpleIdTable() {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
+
 	var bufferSize = 100
 	var ids = make([]int, 0)
 	for h.Next() {

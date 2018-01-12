@@ -36,6 +36,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	var idx = 0
 	var gob string
@@ -79,6 +80,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	var id, fid int
 	var gob string
@@ -119,14 +121,15 @@ func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) []*ct
 		self.Const.Config.GeometryColumn, //geom column
 		dist,                             //dist
 	)
-	var rows, err = self.Const.Query(query)
+	var h, err = self.Const.Query(query)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer h.Close()
 
-	for rows.Next() {
+	for h.Next() {
 		var g *geojson.Geometry
-		rows.Scan(&g)
+		h.Scan(&g)
 		var gs = geometries(g)
 		for _, o := range gs {
 			ctxs = append(ctxs, ctx.New(o, 0, -1).AsContextNeighbour())

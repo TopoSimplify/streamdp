@@ -5,7 +5,6 @@ import (
 	"log"
 	"simplex/db"
 	"simplex/dp"
-	"database/sql"
 	"simplex/streamdp/common"
 )
 
@@ -18,11 +17,18 @@ func (self *OnlineDP) AggregateSimpleSegments(fid, fragmentSize int) {
 	defer self.tempDropTable(temp)
 
 	self.copyFragmentIdsIntoTempTable(fid, fragmentSize, temp)
+
 	//read from temp table nids
-	var nidIter = self.iterTempNIDTable(temp)
-	for nidIter.Next() {
+	var query = fmt.Sprintf("SELECT id FROM %v;", temp)
+	var h, err = self.Src.Query(query)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer h.Close()
+
+	for h.Next() {
 		var nid int
-		nidIter.Scan(&nid)
+		h.Scan(&nid)
 		self.processNodeFragment(fid, nid)
 	}
 }
@@ -40,6 +46,8 @@ func (self *OnlineDP) processNodeFragment(fid, nid int) {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
+
 	for h.Next() {
 		var id int
 		var gob string
@@ -130,19 +138,11 @@ func (self *OnlineDP) copyFragmentIdsIntoTempTable(fid, fragmentSize int, temp s
 	if err != nil {
 		log.Panic(err)
 	}
+	defer h.Close()
 
 	for h.Next() {
 		var nid int
 		h.Scan(&nid)
 		self.tempInsertInNodeIdTable(temp, nid)
 	}
-}
-
-func (self *OnlineDP) iterTempNIDTable(temp string) *sql.Rows {
-	var query = fmt.Sprintf("SELECT id FROM %v;", temp)
-	var h, err = self.Src.Query(query)
-	if err != nil {
-		panic(err)
-	}
-	return h
 }

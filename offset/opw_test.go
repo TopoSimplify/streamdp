@@ -1,12 +1,12 @@
 package offset
 
 import (
-	"github.com/franela/goblin"
+	"time"
 	"testing"
 	"simplex/streamdp/pt"
 	"github.com/intdxdt/geom"
 	"github.com/intdxdt/math"
-	"time"
+	"github.com/franela/goblin"
 )
 
 func TestOpw(t *testing.T) {
