@@ -1,5 +1,5 @@
 .idea/
 *.iml
 sandbox/
-data
-xdata
+data/
+xdata/

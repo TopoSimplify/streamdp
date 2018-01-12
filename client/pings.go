@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"fmt"
-	"time"
 	"sync"
 	"spinner"
 	"simplex/data/store"
@@ -71,7 +70,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 
 			postToServer(token, id, true)
 			count += 1
-			time.Sleep(60 * time.Millisecond)
+			//time.Sleep(60 * time.Millisecond)
 		}
 
 		postToServer("", id, false)

@@ -3,6 +3,7 @@ package onlinedp
 import (
 	"fmt"
 	"strings"
+	"log"
 )
 
 func (self *OnlineDP) tempNodeIDTableName(fid int) string {
@@ -29,7 +30,7 @@ func (self *OnlineDP) tempInsertInNodeIdTable(temp string, nid int) {
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
 
@@ -76,7 +77,7 @@ func (self *OnlineDP) tempInsertInTOTempQueryTable(temp string, queries []string
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }
 
@@ -88,19 +89,14 @@ func (self *OnlineDP) tempExecuteQueries(tempQ string) {
 	}
 	defer h.Close()
 
-	const bufferSize = 100
 	var q string
-	var buf = make([]string, 0)
 	for h.Next() {
 		h.Scan(&q)
-		buf = append(buf, decode64(q))
-		if len(buf) > bufferSize {
-			self.ExecuteTransaction(buf)
-			buf = make([]string, 0)
+		var query = decode64(q)
+		_, err := self.Src.Exec(query)
+		if err != nil {
+			fmt.Println(query)
+			log.Panic(err)
 		}
-	}
-	//flush
-	if len(buf) > 0 {
-		self.ExecuteTransaction(buf)
 	}
 }

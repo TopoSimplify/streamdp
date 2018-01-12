@@ -85,10 +85,12 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	var eqBool = (last != nil) && last.Point.Equals2D(pnt)
 
 	if last != nil {
-		var rm = (last.Ping.Status == AtAnchor) ||
-			(last.Ping.Status == Moored  ) ||
-			(last.Ping.Status == Aground )
-		rmBool = rmBool && rm
+		var rmLBool = (last.Ping.Status == AtAnchor) ||
+			(last.Ping.Status == Moored) || (last.Ping.Status == Aground)
+
+		if !rmLBool && rmBool {
+			rmBool = false
+		}
 	}
 
 	if eqBool || rmBool {
