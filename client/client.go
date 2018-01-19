@@ -30,25 +30,27 @@ func init() {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var pwd = common.ExecutionDir()
-	var dataDir = filepath.Join(pwd, "../data")
-	var srcFile = filepath.Join(pwd, "../resource/src.toml")
-	var ignoreDirs = []string{".git", ".idea"}
-	var filter = []string{"toml"}
+	var pwd         = common.ExecutionDir()
+	var dataDir     = filepath.Join(pwd, "../data")
+	var srcFile     = filepath.Join(pwd, "../resource/src.toml")
+	var ignoreDirs  = []string{".git", ".idea"}
+	var filter      = []string{"toml"}
 
 	ClearHistoryAddress = fmt.Sprintf("http://%v:%v/history/clear", Host, Port)
 	Address = fmt.Sprintf("http://%v:%v/ping", Host, Port)
 
-	var serverCfg = (&config.Server{}).Load(srcFile)
+	var serverCfg = (&config.ServerConfig{}).Load(srcFile)
 	var dbCfg = serverCfg.DBConfig()
 	var connSettings = fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
 		dbCfg.User, dbCfg.Password, dbCfg.Database,
 	)
+
 	var sqlsrc, err = sql.Open("postgres", connSettings)
 	if err != nil {
 		log.Panic(err)
 	}
+
 	var src = &db.DataSrc{
 		Src:    sqlsrc,
 		Config: dbCfg,

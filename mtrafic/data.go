@@ -7,7 +7,41 @@ import (
 	"io/ioutil"
 	"simplex/data/store"
 	"github.com/naoina/toml"
+	"simplex/streamdp/enc"
 )
+
+type CfgMsg struct {
+	ConstraintToml string `json:"constrainttoml"`
+	ServerToml     string `json:"servertoml"`
+}
+
+func (cfg *CfgMsg) EncodeMsg() *CfgMsg {
+	cfg.ConstraintToml = enc.Encode64(cfg.ConstraintToml)
+	cfg.ServerToml = enc.Encode64(cfg.ServerToml)
+	return cfg
+}
+
+func (cfg *CfgMsg) DecodeMsg() *CfgMsg {
+	cfg.ConstraintToml = enc.Decode64(cfg.ConstraintToml)
+	cfg.ServerToml = enc.Decode64(cfg.ServerToml)
+	return cfg
+}
+
+func (cfg *CfgMsg) ToJSON() string {
+	return fmt.Sprintf(`{
+			"constrainttoml" : "%v", 
+			"servertoml"     : "%v"
+		}`, cfg.ConstraintToml, cfg.ServerToml,
+	)
+}
+
+func (cfg *CfgMsg) Clone() *CfgMsg {
+	return cfg.cloneMsg()
+}
+
+func (cfg CfgMsg) cloneMsg() *CfgMsg {
+	return &cfg
+}
 
 type PingMsg struct {
 	Id        int    `json:"id"`
@@ -16,7 +50,7 @@ type PingMsg struct {
 }
 
 type Ping struct {
-	MMSI   int   `toml:"mmsi"`
+	MMSI   int       `toml:"mmsi"`
 	Time   time.Time `toml:"time"`
 	X      float64   `toml:"x"`
 	Y      float64   `toml:"y"`
@@ -27,7 +61,7 @@ type Ping struct {
 func (p *Ping) String() string {
 	return fmt.Sprintf(
 		`{ MMSI:%v, Time:%v, X:%v, Y:%v, Speed:%v, Status:%v }`,
-		p.MMSI,  p.Time.Unix(), p.X, p.Y, p.Speed, p.Status)
+		p.MMSI, p.Time.Unix(), p.X, p.Y, p.Speed, p.Status)
 }
 
 func ReadMTraj(fname string) *store.MTraj {

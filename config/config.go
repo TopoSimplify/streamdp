@@ -5,10 +5,9 @@ import (
 	"simplex/db"
 	"simplex/opts"
 	"github.com/naoina/toml"
-	"github.com/intdxdt/fileutil"
 )
 
-type Server struct {
+type ServerConfig struct {
 	ServerAddress          string  `toml:"ServerAddress"`
 	DBHost                 string  `toml:"DBHost"`
 	Password               string  `toml:"Password"`
@@ -27,38 +26,42 @@ type Server struct {
 	DirRelation            bool    `toml:"DirRelation"`
 }
 
-func (cfg *Server) DBConfig() db.Config {
+func (scfg *ServerConfig) DBConfig() db.Config {
 	return db.Config{
-		Host:           cfg.DBHost,
-		Password:       cfg.Password,
-		Database:       cfg.Database,
-		User:           cfg.User,
-		Table:          cfg.Table,
+		Host:           scfg.DBHost,
+		Password:       scfg.Password,
+		Database:       scfg.Database,
+		User:           scfg.User,
+		Table:          scfg.Table,
 		GeometryColumn: db.GeomColumn,
 		IdColumn:       db.IdColumn,
 	}
 }
 
-func (cfg *Server) DPOptions() *opts.Opts {
+func (scfg *ServerConfig) DPOptions() *opts.Opts {
 	return &opts.Opts{
-		Threshold:              cfg.Threshold,
-		MinDist:                cfg.MinDist,
-		RelaxDist:              cfg.RelaxDist,
+		Threshold:              scfg.Threshold,
+		MinDist:                scfg.MinDist,
+		RelaxDist:              scfg.RelaxDist,
 		KeepSelfIntersects:     false,
-		AvoidNewSelfIntersects: cfg.AvoidNewSelfIntersects,
-		GeomRelation:           cfg.GeomRelation,
-		DistRelation:           cfg.DistRelation,
-		DirRelation:            cfg.DirRelation,
+		AvoidNewSelfIntersects: scfg.AvoidNewSelfIntersects,
+		GeomRelation:           scfg.GeomRelation,
+		DistRelation:           scfg.DistRelation,
+		DirRelation:            scfg.DirRelation,
 	}
 }
 
-func (cfg *Server) Load(fileName string) *Server {
-	if txt, err := fileutil.ReadAllOfFile(fileName); err == nil {
-		if err = toml.Unmarshal([]byte(txt), cfg); err != nil {
-			log.Panic(err)
-		}
-	} else {
+func (scfg *ServerConfig) Clone() *ServerConfig {
+	return scfg.cloneCfg()
+}
+
+func (scfg ServerConfig) cloneCfg() *ServerConfig {
+	return &scfg
+}
+
+func (scfg *ServerConfig) Load(tomlstring string) *ServerConfig {
+	if err := toml.Unmarshal([]byte(tomlstring), scfg); err != nil {
 		log.Panic(err)
 	}
-	return cfg
+	return scfg
 }

@@ -23,6 +23,7 @@ func (server *Server) goProcessInputStream() {
 		select {
 		//listen to results channel
 		case <-server.Exit:
+			server.ExitWg.Done()
 			return
 		case nodes := <-server.InputStream:
 			if len(nodes) == 0 {
@@ -51,6 +52,7 @@ func (server *Server) goProcessSimpleStream() {
 	for {
 		select {
 		case <-server.Exit:
+			server.ExitWg.Done()
 			return
 		case <-time.After(simpleInterval * time.Second):
 			server.createSimpleIdTable()

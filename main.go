@@ -1,19 +1,20 @@
 package main
 
 import (
+	"os"
 	"flag"
 	"runtime"
+	"os/signal"
 	"simplex/opts"
 	"simplex/offset"
-	"os"
-	"os/signal"
+	"fmt"
 )
 
 var Port int
 var Host string
 
 const DebugMode = 0
-const ReleaseMode = 0
+const ReleaseMode = 1
 const Error = 500
 const Success = 200
 
@@ -35,14 +36,15 @@ func init() {
 func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var server = NewServer("localhost:8000", DebugMode)
-	defer close(server.Exit)
 
+	var server = NewServer("localhost:8000", ReleaseMode)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+
 	go func() {
 		<- c
-		server.Exit <- struct{}{}
+		fmt.Println("singnaled exit ...")
+		close(server.Exit)
 		os.Exit(0)
 	}()
 

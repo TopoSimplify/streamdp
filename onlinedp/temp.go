@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"log"
+	"simplex/streamdp/enc"
 )
 
 func (self *OnlineDP) tempNodeIDTableName(fid int) string {
@@ -68,7 +69,7 @@ func (self *OnlineDP) tempInsertInTOTempQueryTable(temp string, queries []string
 	}
 	var qs = make([]string, 0)
 	for _, q := range queries {
-		qs = append(qs, fmt.Sprintf(`('%v')`, encode64(q)))
+		qs = append(qs, fmt.Sprintf(`('%v')`, enc.Encode64(q)))
 	}
 	var vals = strings.Join(qs, ",")
 	var query = fmt.Sprintf(
@@ -92,7 +93,7 @@ func (self *OnlineDP) tempExecuteQueries(tempQ string) {
 	var q string
 	for h.Next() {
 		h.Scan(&q)
-		var query = decode64(q)
+		var query = enc.Decode64(q)
 		_, err := self.Src.Exec(query)
 		if err != nil {
 			fmt.Println(query)

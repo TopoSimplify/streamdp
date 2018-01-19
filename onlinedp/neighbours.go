@@ -7,9 +7,9 @@ import (
 	"simplex/db"
 	"simplex/ctx"
 	"simplex/rng"
+	"simplex/streamdp/common"
 	"github.com/intdxdt/geom"
 	"github.com/paulmach/go.geojson"
-	"simplex/streamdp/common"
 )
 
 type NeighbQ struct {
@@ -141,6 +141,7 @@ func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) []*ct
 func geometries(g *geojson.Geometry) []geom.Geometry {
 	var gs = make([]geom.Geometry, 0)
 	var gtype = strings.ToLower(string(g.Type))
+
 	if gtype == "point" {
 		gs = append(gs, point(g.Point))
 	} else if gtype == "multipoint" {
@@ -154,6 +155,7 @@ func geometries(g *geojson.Geometry) []geom.Geometry {
 	} else if gtype == "multipolygon" {
 		gs = append(gs, multiPolygon(g.MultiPolygon)...)
 	}
+
 	return gs
 }
 
