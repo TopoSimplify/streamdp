@@ -6,12 +6,12 @@ import (
 	"flag"
 	"time"
 	"math/rand"
-	"path/filepath"
-	"simplex/streamdp/common"
-	"simplex/streamdp/mtrafic"
 	"io/ioutil"
+	"path/filepath"
 	"github.com/naoina/toml"
 	"simplex/streamdp/config"
+	"simplex/streamdp/common"
+	"simplex/streamdp/mtrafic"
 )
 
 var Port int
