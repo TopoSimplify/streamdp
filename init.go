@@ -12,15 +12,10 @@ import (
 	"simplex/streamdp/common"
 	"simplex/streamdp/onlinedp"
 	"simplex/streamdp/mtrafic"
+	"github.com/intdxdt/random"
 )
 
 func (server *Server) initSources() {
-	if server.ConstSrc != nil {
-		server.ConstSrc.Close()
-	}
-	if server.Src != nil {
-		server.Src.Close()
-	}
 	var dbCfg = server.Config.DBConfig()
 	inputSrc, err := sql.Open("postgres", fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
@@ -61,7 +56,6 @@ func (server *Server) closeSources() {
 }
 
 func (server *Server) loadConfig(msg *mtrafic.CfgMsg) {
-	fmt.Println("threshold :", server.Config.Threshold)
 	server.Config.Load(msg.ServerToml)
 	server.ConstSrc = db.NewDataSrc(msg.ConstraintToml)
 }
@@ -79,14 +73,26 @@ func (server *Server) initExit() {
 func (server *Server) init(msg *mtrafic.CfgMsg) {
 	server.initExit()
 	server.closeSources()
-	server.loadConfig(msg)
 	server.closeStreams()
 
 	runtime.Gosched()
-	log.Println("setting up server config ...")
+	time.Sleep(time.Second)
+
+	server.loadConfig(msg)
+	runtime.Gosched()
 	time.Sleep(3 * time.Second)
 
 	server.initSources()
+
+	//set current task to new task id
+	server.CurTaskID = fmt.Sprintf(
+		`threshold_%v_%v`,
+		server.Config.Threshold, random.String(10),
+	)
+	//set task status
+	server.TaskMap[server.CurTaskID] = Busy
+
+	fmt.Println("loaded threshold :", server.Config.Threshold)
 
 	server.Exit = make(chan struct{})
 	server.InputStream = make(chan []*db.Node, InputBufferSize)

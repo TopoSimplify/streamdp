@@ -10,6 +10,8 @@ import (
 
 const (
 	InputBufferSize = 3
+	Busy            = "busy"
+	Done            = "done"
 )
 
 type Server struct {
@@ -23,10 +25,11 @@ type Server struct {
 	SimpleStream chan []int
 	Exit         chan struct{}
 	ExitWg       *sync.WaitGroup
+	TaskMap      map[string]string
+	CurTaskID    string
 }
 
 func NewServer(address string, mode int) *Server {
-
 	var exit = make(chan struct{})
 	var inputStream = make(chan []*db.Node, InputBufferSize)
 	var simpleStream = make(chan []int)
@@ -41,6 +44,7 @@ func NewServer(address string, mode int) *Server {
 		SimpleStream: simpleStream,
 		Exit:         exit,
 		ExitWg:       exitWg,
+		TaskMap:      make(map[string]string),
 	}
 
 	return server

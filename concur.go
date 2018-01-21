@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 	"strings"
+	"spinner"
 	"simplex/db"
 	"simplex/streamdp/common"
-	"spinner"
 )
 
 const (
@@ -16,6 +16,7 @@ const (
 	batchSize      = 16
 	simpleInterval = 1 //secs
 	simpleIdTable  = "temp_simple_ids"
+	IdleLimit      = 3
 )
 
 func (server *Server) goProcessInputStream() {
@@ -48,6 +49,8 @@ func (server *Server) goProcessInputStream() {
 }
 
 func (server *Server) goProcessSimpleStream() {
+	var idleCount = 0
+	server.dropSimpleIdTable() //drop if exist
 	//listen to results channel
 	for {
 		select {
@@ -57,7 +60,6 @@ func (server *Server) goProcessSimpleStream() {
 		case <-time.After(simpleInterval * time.Second):
 			server.createSimpleIdTable()
 			server.copyIdsIntoSimpleIdTable()
-
 
 			var buf = make([]int, 0)
 
@@ -92,6 +94,7 @@ func (server *Server) goProcessSimpleStream() {
 			}
 
 			for h.Next() {
+				idleCount = 0
 				bln = true
 				var fid int
 				h.Scan(&fid)
@@ -109,6 +112,10 @@ func (server *Server) goProcessSimpleStream() {
 			}
 
 			if !bln {
+				idleCount += 1
+				if idleCount > IdleLimit {
+					server.TaskMap[server.CurTaskID] = Done
+				}
 				log.Println("...nothing to simplify...")
 			}
 			//drop table

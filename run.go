@@ -14,6 +14,7 @@ func (server *Server) Run() {
 	}
 
 	router.POST("/ping", server.trafficRouter)
+	router.POST("/task/status/:name", server.getTaskStatus)
 	router.POST("/update/server/config", server.updateServerConfig)
 	router.POST("/history/clear", server.clearHistory)
 	router.POST("/simplify", server.clearHistory)

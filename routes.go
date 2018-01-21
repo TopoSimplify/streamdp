@@ -7,6 +7,16 @@ import (
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
+func (server *Server) getTaskStatus(ctx *gin.Context) {
+	name := ctx.Param("name")
+	if server.TaskMap[name] == "" {
+		log.Panic("task id not found")
+		ctx.JSON(Error, gin.H{"message": "error", "task": ""})
+		return
+	}
+	ctx.JSON(Success, gin.H{"message": server.TaskMap[name], "task": name})
+}
+
 func (server *Server) updateServerConfig(ctx *gin.Context) {
 	var msg = &mtrafic.CfgMsg{}
 	var err = ctx.BindJSON(msg)
@@ -14,12 +24,12 @@ func (server *Server) updateServerConfig(ctx *gin.Context) {
 
 	if err != nil {
 		log.Panic(err)
-		ctx.JSON(Error, gin.H{"message": "error"})
+		ctx.JSON(Error, gin.H{"message": "error", "task": ""})
 		return
 	}
 
 	server.init(msg)
-	ctx.JSON(Success, gin.H{"message": "success"})
+	ctx.JSON(Success, gin.H{"message": "success", "task": server.CurTaskID})
 }
 
 func (server *Server) clearHistory(ctx *gin.Context) {

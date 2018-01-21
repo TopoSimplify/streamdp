@@ -37,12 +37,12 @@ func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var server = NewServer("localhost:8000", ReleaseMode)
+	var server = NewServer("localhost:8000", DebugMode)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
 	go func() {
-		<- c
+		<-c
 		fmt.Println("singnaled exit ...")
 		close(server.Exit)
 		os.Exit(0)
