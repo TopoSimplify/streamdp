@@ -13,7 +13,7 @@ import (
 //obj.createOutputOnlineTable()
 //obj.SaveSimplification()
 
-//Find and merge simple segments
+//Save simplification
 func (self *OnlineDP) SaveSimplification(fid int) {
 	var outputTable = common.SimpleTable(self.Src.Table)
 	var query = fmt.Sprintf(`
