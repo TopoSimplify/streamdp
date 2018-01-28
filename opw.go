@@ -101,7 +101,7 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 		Point: pnt, Ping: ping, I: I,
 	})
 
-	if self.cache.size() < MinimumCacheLimit || self.cache.size() >= self.MaxCacheLimit {
+	if self.cache.size() < MinimumCacheLimit {
 		return node
 	}
 
