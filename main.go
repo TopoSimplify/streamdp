@@ -8,15 +8,16 @@ import (
 	"simplex/opts"
 	"simplex/offset"
 	"fmt"
+	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var Port int
 var Host string
 
-const DebugMode = 0
-const ReleaseMode = 1
-const Error = 500
-const Success = 200
+const DebugMode     = 0
+const ReleaseMode   = 1
+const Error         = 500
+const Success       = 200
 
 var SimpleHistory *SimpleMap
 var VesselHistory *History
@@ -37,15 +38,15 @@ func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var server = NewServer("localhost:8000", DebugMode)
-	c := make(chan os.Signal, 1)
+	var server = NewServer("localhost:8000", gin.DebugMode)
+	var c = make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
 	go func() {
 		<-c
 		fmt.Println("singnaled exit ...")
 		close(server.Exit)
-		os.Exit(0)
+		os.Exit(1)
 	}()
 
 	server.Run()

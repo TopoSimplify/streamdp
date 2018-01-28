@@ -7,11 +7,7 @@ import (
 
 func (server *Server) Run() {
 	var router = gin.Default()
-	if server.Mode == 0 {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	gin.SetMode(server.Mode)
 
 	router.POST("/ping", server.trafficRouter)
 	router.POST("/task/status/:name", server.getTaskStatus)

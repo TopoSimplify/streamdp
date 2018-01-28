@@ -93,6 +93,7 @@ func (server *Server) init(msg *mtrafic.CfgMsg) {
 	server.TaskMap[server.CurTaskID] = Busy
 
 	fmt.Println("loaded threshold :", server.Config.Threshold)
+	time.Sleep(3 * time.Second)
 
 	server.Exit = make(chan struct{})
 	server.InputStream = make(chan []*db.Node, InputBufferSize)

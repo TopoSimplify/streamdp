@@ -101,13 +101,13 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 		Point: pnt, Ping: ping, I: I,
 	})
 
-	if self.cache.size() < MinimumCacheLimit {
+	if self.cache.size() < MinimumCacheLimit || self.cache.size() >= self.MaxCacheLimit {
 		return node
 	}
 
 	var index, val = OPWScoreFn(self.cache)
 
-	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit {
+	if self.ScoreRelation(val) {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {

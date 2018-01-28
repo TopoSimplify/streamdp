@@ -17,7 +17,7 @@ const (
 type Server struct {
 	Config       *config.ServerConfig
 	Address      string
-	Mode         int
+	Mode         string
 	Src          *db.DataSrc
 	ConstSrc     *db.DataSrc
 	OnlineDP     *onlinedp.OnlineDP
@@ -29,7 +29,7 @@ type Server struct {
 	CurTaskID    string
 }
 
-func NewServer(address string, mode int) *Server {
+func NewServer(address string, mode string) *Server {
 	var exit = make(chan struct{})
 	var inputStream = make(chan []*db.Node, InputBufferSize)
 	var simpleStream = make(chan []int)
