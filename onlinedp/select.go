@@ -2,9 +2,9 @@ package onlinedp
 
 import (
 	"simplex/db"
-	"github.com/intdxdt/geom"
-	"simplex/opts"
 	"simplex/rng"
+	"simplex/opts"
+	"github.com/intdxdt/geom"
 )
 
 func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
@@ -22,8 +22,9 @@ func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
 	var neighbs = self.FindNodeNeighbours(hull, self.Independent)
 
 	// self intersection constraint
-	// can self intersect with itself but not with other lines
-	self.ByFeatureClassIntersection(hull, neighbs, &selections)
+	if self.Options.AvoidNewSelfIntersects {
+		self.ByFeatureClassIntersection(hull, neighbs, &selections)
+	}
 
 	// context_geom geometry constraint
 	self.ValidateContextRelation(hull, &selections)
@@ -54,7 +55,6 @@ func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node
 //Constrain for self-intersection as a result of simplification
 func (self *OnlineDP) ByFeatureClassIntersection(hull *db.Node, neighbs []*db.Node, selections *[]*db.Node) bool {
 	var bln = true
-
 	//find hull neighbours
 	var hulls = self.SelectFeatureClass(hull, neighbs)
 	for _, h := range hulls {

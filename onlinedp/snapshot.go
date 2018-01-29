@@ -55,9 +55,7 @@ func (self *OnlineDP) MarkNullStateAsCollapsible(fid int) {
 			SET status=%v
 			WHERE status=%v AND fid=%v AND snapshot=%v;
 		`,
-		self.Src.Table,
-		Collapsible,
-		NullState, fid, common.Snap,
+		self.Src.Table, Collapsible, NullState, fid, common.Snap,
 	)
 	if _, err := self.Src.Exec(query); err != nil {
 		log.Fatalln(err)

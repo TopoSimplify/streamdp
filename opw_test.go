@@ -5,8 +5,8 @@ import (
 	"testing"
 	"simplex/db"
 	"simplex/opts"
-	"simplex/streamdp/mtrafic"
 	"simplex/streamdp/offset"
+	"simplex/streamdp/mtrafic"
 	"github.com/franela/goblin"
 )
 
