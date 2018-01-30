@@ -36,13 +36,9 @@ func (self *OnlineDP) HasMoreDeformables(fid int) bool {
 
 func (self *OnlineDP) MarkSnapshot(fid int, snapState int) {
 	var query = fmt.Sprintf(`
-			UPDATE %v
-			SET snapshot=%v
-			WHERE fid=%v;
+			UPDATE %v SET snapshot=%v WHERE fid=%v;
 		`,
-		self.Src.Table,
-		snapState,
-		fid,
+		self.Src.Table, snapState, fid,
 	)
 	var _, err = self.Src.Exec(query)
 	if err != nil {
@@ -65,11 +61,8 @@ func (self *OnlineDP) MarkNullStateAsCollapsible(fid int) {
 
 func (self *OnlineDP) CleanUpDeformables(fid int) {
 	var query = fmt.Sprintf(`
-		DELETE FROM %v
-		WHERE status=%v AND fid=%v AND snapshot=%v;
-		`,
-		self.Src.Table,
-		SplitNode, fid, common.Snap,
+		DELETE FROM %v WHERE status=%v AND fid=%v AND snapshot=%v;
+		`, self.Src.Table, SplitNode, fid, common.Snap,
 	)
 	if _, err := self.Src.Exec(query); err != nil {
 		log.Panic(err)
@@ -77,7 +70,7 @@ func (self *OnlineDP) CleanUpDeformables(fid int) {
 }
 
 func (self *OnlineDP) MarkDeformables(fid int) {
-	var fidMap = make(map[int]struct{})
+	const concur = 4
 	var query = fmt.Sprintf(`
 			SELECT id, node
 			FROM  %v
@@ -92,20 +85,7 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 	}
 	defer h.Close()
 
-	//for h.Next() {
-	//	var id int
-	//	var gob string
-	//	h.Scan(&id, &gob)
-	//	var o = db.Deserialize(gob)
-	//	o.NID, o.FID = id, fid
-	//
-	//	var selections = self.selectDeformable(o)
-	//	for _, s := range selections {
-	//		fidMap[s.NID] = struct{}{}
-	//	}
-	//}
-
-	var stream = make(chan interface{}, 4*concurProcs)
+	var stream = make(chan interface{}, 4*concur)
 	var exit = make(chan struct{})
 	defer close(exit)
 
@@ -122,24 +102,24 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 	}()
 
 	var worker = func(v interface{}) interface{} {
-		var o = v.(*db.Node)
-		var selections = self.selectDeformable(o)
-		for _, s := range selections {
-			fidMap[s.NID] = struct{}{}
-		}
+		return self.selectDeformable(v.(*db.Node))
 	}
-	var out = fan.Stream(stream, worker, concurProcs, exit)
+	var out = fan.Stream(stream, worker, concur, exit)
 
 	const bufferSize = 200
-	var buf = make([]int, 0)
-	for nid := range out {
-		var id = nid.(int)
-		buf = append(buf, id)
-		if len(buf) > bufferSize {
-			self.markDeformableNodes(buf)
-			buf = make([]int, 0) //reset
+	var buf = make(map[int]struct{})
+
+	for selections := range out {
+		var nodes = selections.([]*db.Node)
+		for _, node := range nodes {
+			buf[node.NID] = struct{}{}
+			if len(buf) > bufferSize {
+				self.markDeformableNodes(buf)
+				buf = make(map[int]struct{}) //reset
+			}
 		}
 	}
+
 	//flush
 	if len(buf) > 0 {
 		self.markDeformableNodes(buf)
@@ -147,9 +127,14 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 
 }
 
-func (self *OnlineDP) markDeformableNodes(selections []int) int {
+func (self *OnlineDP) markDeformableNodes(buffer map[int]struct{}) {
+	var selections = make([]int, 0, len(buffer))
+	for id := range buffer {
+		selections = append(selections, id)
+	}
+
 	if len(selections) == 0 {
-		return 0
+		return
 	}
 	var buf bytes.Buffer
 	var k = len(selections) - 1
@@ -170,30 +155,15 @@ func (self *OnlineDP) markDeformableNodes(selections []int) int {
 	`,
 		self.Src.Table, buf.String(),
 	)
-	var r, err = self.Src.Exec(query)
+	var _, err = self.Src.Exec(query)
 	if err != nil {
 		log.Panic(err)
 	}
-	nrs, err := r.RowsAffected()
-	if err != nil {
-		log.Panic(err)
-	}
-	return int(nrs)
 }
 
 func (self *OnlineDP) SplitDeformables(fid int) {
-	var tempQ = fmt.Sprintf("%v_%v", self.tempQueryTableName(), fid)
-	self.tempCreateTempQueryTable(tempQ)
-	defer self.tempDropTable(tempQ)
-
-	var worker = func(hull *db.Node) string {
-		if hull.Range.Size() > 1 {
-			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
-			var vals = common.SnapshotNodeColumnValues(self.Src.SRID, common.Snap, ha, hb)
-			return db.SQLInsertIntoTable(self.Src.Table, common.NodeColumnFields, vals)
-		}
-		return hull.UpdateSQL(self.Src.Table, NullState)
-	}
+	const concur = 4
+	const bufferSize = 100
 
 	var query = fmt.Sprintf(`
 			SELECT id, node
@@ -209,27 +179,56 @@ func (self *OnlineDP) SplitDeformables(fid int) {
 	}
 	defer h.Close()
 
-	var bufferSize = 100
+	var stream = make(chan interface{}, 4*concur)
+	var exit = make(chan struct{})
+	defer close(exit)
+
+	go func() {
+		for h.Next() {
+			var id int
+			var gob string
+
+			h.Scan(&id, &gob)
+			o := db.Deserialize(gob)
+			o.NID, o.FID = id, fid
+			stream <- o
+		}
+		close(stream)
+	}()
+
+	var worker = func(v interface{}) interface{} {
+		var hull = v.(*db.Node)
+		if hull.Range.Size() > 1 {
+			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
+			var vals = common.SnapshotNodeColumnValues(self.Src.SRID, common.Snap, ha, hb)
+			return db.SQLInsertIntoTable(self.Src.Table, common.NodeColumnFields, vals)
+		}
+		return hull.UpdateSQL(self.Src.Table, NullState)
+	}
+
+	var out = fan.Stream(stream, worker, concur, exit)
+
 	var buf = make([]string, 0)
-	for h.Next() {
-		var id int
-		var gob string
 
-		h.Scan(&id, &gob)
-		o := db.Deserialize(gob)
-		o.NID, o.FID = id, fid
+	var processQuery = func(buf []string) {
+		for _, query := range buf {
+			if _, err := self.Src.Exec(query); err != nil {
+				fmt.Println(query)
+				log.Panic(err)
+			}
+		}
+	}
 
-		selStr := worker(o)
-		buf = append(buf, selStr)
+	for insQ := range out {
+		buf = append(buf, insQ.(string))
 		if len(buf) > bufferSize {
-			self.tempInsertInTOTempQueryTable(tempQ, buf)
+			processQuery(buf)
 			buf = make([]string, 0) //reset
 		}
 	}
 
 	//flush buf
 	if len(buf) > 0 {
-		self.tempInsertInTOTempQueryTable(tempQ, buf)
+		processQuery(buf)
 	}
-	self.tempExecuteQueries(tempQ)
 }

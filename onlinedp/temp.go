@@ -82,22 +82,3 @@ func (self *OnlineDP) tempInsertInTOTempQueryTable(temp string, queries []string
 	}
 }
 
-func (self *OnlineDP) tempExecuteQueries(tempQ string) {
-	var query = fmt.Sprintf("SELECT query  FROM  %v;", tempQ)
-	var h, err = self.Src.Query(query)
-	if err != nil {
-		panic(err)
-	}
-	defer h.Close()
-
-	var q string
-	for h.Next() {
-		h.Scan(&q)
-		var query = enc.Decode64(q)
-		_, err := self.Src.Exec(query)
-		if err != nil {
-			fmt.Println(query)
-			log.Panic(err)
-		}
-	}
-}
