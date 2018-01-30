@@ -13,7 +13,7 @@ import (
 
 const (
 	NullState      = 0
-	batchSize      = 16
+	batchSize      = 8
 	simpleInterval = 1 //secs
 	simpleIdTable  = "temp_simple_ids"
 	IdleLimit      = 3
