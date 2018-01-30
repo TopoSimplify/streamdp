@@ -99,7 +99,7 @@ func (server *Server) init(msg *mtrafic.CfgMsg) {
 	server.InputStream = make(chan []*db.Node, InputBufferSize)
 	server.SimpleStream = make(chan []int)
 
-	var simpleType = strings.ToLower(server.Config.SimplficationType)
+	var simpleType = strings.ToLower(server.Config.SimplificationType)
 
 	if simpleType == "nopw" {
 		SimplificationType = NOPW

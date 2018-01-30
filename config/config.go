@@ -14,7 +14,7 @@ type ServerConfig struct {
 	Database               string  `toml:"Database"`
 	User                   string  `toml:"User"`
 	Table                  string  `toml:"Table"`
-	SimplficationType      string  `toml:"SimplficationType"`
+	SimplificationType     string  `toml:"SimplificationType"`
 	SRID                   int     `toml:"SRID"`
 	Dim                    int     `toml:"Dim"`
 	Threshold              float64 `toml:"Threshold"`

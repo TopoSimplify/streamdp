@@ -10,15 +10,15 @@ func (self *OnlineDP) Simplify(fid int) {
 	self.MarkSnapshot(fid, common.Snap)
 	defer self.MarkSnapshot(fid, common.UnSnap)
 
-	// 0.while has more deformables : loop
+	// 0. while has more deformables : loop
 	for self.HasMoreDeformables(fid) {
-		// 1.find and mark deformable nodes
+		// 1. find and mark deformable nodes
 		self.MarkDeformables(fid)
-		// 2.mark valid nodes as collapsible
+		// 2. mark valid nodes as collapsible
 		self.MarkNullStateAsCollapsible(fid)
-		// 3.find and split deformable nodes, set status as nullstate
+		// 3. find and split deformable nodes, set status as nullstate
 		self.SplitDeformables(fid)
-		// 4.remove deformable nodes
+		// 4. remove deformable nodes
 		self.CleanUpDeformables(fid)
 	}
 

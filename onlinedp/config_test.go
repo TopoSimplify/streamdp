@@ -3,37 +3,23 @@ package onlinedp
 import (
 	"log"
 	"simplex/db"
-	"simplex/opts"
 	"github.com/naoina/toml"
+	"simplex/streamdp/config"
 	"github.com/intdxdt/fileutil"
 )
 
 func loadConfig(filename string) *ServerConfig {
-	var cfg = &ServerConfig{}
-	var err = cfg.Load(filename)
-	if err != nil {
-		log.Fatalln(err)
+	var cfg = &ServerConfig{ServerConfig: config.ServerConfig{}}
+	if err := cfg.Load(filename); err != nil {
+		log.Panic(err)
 	}
+	cfg.Database = TestDBName
+	cfg.Table = TestTable
 	return cfg
 }
 
-
 type ServerConfig struct {
-	ServerAddress          string  `toml:"ServerAddress"`
-	DBHost                 string  `toml:"DBHost"`
-	Password               string  `toml:"Password"`
-	Database               string  `toml:"Database"`
-	User                   string  `toml:"User"`
-	Table                  string  `toml:"Table"`
-	SRID                   int     `toml:"SRID"`
-	Dim                    int     `toml:"Dim"`
-	Threshold              float64 `toml:"Threshold"`
-	MinDist                float64 `toml:"MinDist"`
-	RelaxDist              float64 `toml:"RelaxDist"`
-	AvoidNewSelfIntersects bool    `toml:"AvoidNewSelfIntersects"`
-	GeomRelation           bool    `toml:"GeomRelation"`
-	DistRelation           bool    `toml:"DistRelation"`
-	DirRelation            bool    `toml:"DirRelation"`
+	config.ServerConfig
 }
 
 func (cfg *ServerConfig) DBConfig() db.Config {
@@ -48,24 +34,11 @@ func (cfg *ServerConfig) DBConfig() db.Config {
 	}
 }
 
-func (cfg *ServerConfig) DPOptions() *opts.Opts {
-	return &opts.Opts{
-		Threshold:              cfg.Threshold,
-		MinDist:                cfg.MinDist,
-		RelaxDist:              cfg.RelaxDist,
-		KeepSelfIntersects:     false,
-		AvoidNewSelfIntersects: cfg.AvoidNewSelfIntersects,
-		GeomRelation:           cfg.GeomRelation,
-		DistRelation:           cfg.DistRelation,
-		DirRelation:            cfg.DirRelation,
-	}
-}
-
 func (cfg *ServerConfig) Load(fileName string) error {
 	var txt, err = fileutil.ReadAllOfFile(fileName)
 	if err != nil {
 		return err
 	}
-	return toml.Unmarshal([]byte(txt), cfg)
-}
 
+	return toml.Unmarshal([]byte(txt), &cfg.ServerConfig)
+}

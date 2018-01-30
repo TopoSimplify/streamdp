@@ -7,6 +7,7 @@ import (
 	"simplex/db"
 	"simplex/dp"
 	"simplex/streamdp/common"
+	"github.com/intdxdt/fan"
 )
 
 func (self *OnlineDP) HasMoreDeformables(fid int) bool {
@@ -76,14 +77,11 @@ func (self *OnlineDP) CleanUpDeformables(fid int) {
 }
 
 func (self *OnlineDP) MarkDeformables(fid int) {
-	var temp = self.tempNodeIDTableName(fid)
-	self.tempCreateNodeIdTable(temp)
-	defer self.tempDropTable(temp)
-
+	var fidMap = make(map[int]struct{})
 	var query = fmt.Sprintf(`
-		SELECT id, node
-		FROM  %v
-		WHERE status=%v AND fid=%v AND snapshot=%v;
+			SELECT id, node
+			FROM  %v
+			WHERE status=%v AND fid=%v AND snapshot=%v;
 		`,
 		self.Src.Table, NullState, fid, common.Snap,
 	)
@@ -94,47 +92,59 @@ func (self *OnlineDP) MarkDeformables(fid int) {
 	}
 	defer h.Close()
 
-	for h.Next() {
-		var id int
-		var gob string
-		h.Scan(&id, &gob)
-		var o = db.Deserialize(gob)
-		o.NID, o.FID = id, fid
+	//for h.Next() {
+	//	var id int
+	//	var gob string
+	//	h.Scan(&id, &gob)
+	//	var o = db.Deserialize(gob)
+	//	o.NID, o.FID = id, fid
+	//
+	//	var selections = self.selectDeformable(o)
+	//	for _, s := range selections {
+	//		fidMap[s.NID] = struct{}{}
+	//	}
+	//}
 
+	var stream = make(chan interface{}, 4*concurProcs)
+	var exit = make(chan struct{})
+	defer close(exit)
+
+	go func() {
+		for h.Next() {
+			var id int
+			var gob string
+			h.Scan(&id, &gob)
+			var o = db.Deserialize(gob)
+			o.NID, o.FID = id, fid
+			stream <- o
+		}
+		close(stream)
+	}()
+
+	var worker = func(v interface{}) interface{} {
+		var o = v.(*db.Node)
 		var selections = self.selectDeformable(o)
 		for _, s := range selections {
-			self.tempInsertInNodeIdTable(temp, s.NID)
+			fidMap[s.NID] = struct{}{}
 		}
 	}
+	var out = fan.Stream(stream, worker, concurProcs, exit)
 
-	self.MarkNullState(temp)
-}
-
-func (self *OnlineDP) MarkNullState(temp string) {
 	const bufferSize = 200
 	var buf = make([]int, 0)
-	var query = fmt.Sprintf(`SELECT id  FROM  %v;`, temp)
-
-	var h, err = self.Src.Query(query)
-	if err != nil {
-		log.Panic(err)
-	}
-	defer h.Close()
-
-	var id int
-	for h.Next() {
-		h.Scan(&id)
+	for nid := range out {
+		var id = nid.(int)
 		buf = append(buf, id)
 		if len(buf) > bufferSize {
 			self.markDeformableNodes(buf)
 			buf = make([]int, 0) //reset
 		}
 	}
-
 	//flush
 	if len(buf) > 0 {
 		self.markDeformableNodes(buf)
 	}
+
 }
 
 func (self *OnlineDP) markDeformableNodes(selections []int) int {
@@ -149,13 +159,15 @@ func (self *OnlineDP) markDeformableNodes(selections []int) int {
 			buf.WriteString(`,`)
 		}
 	}
+
 	var query = fmt.Sprintf(`
 		UPDATE %v AS u
 		SET status= u2.status
 		FROM
 			( VALUES %v ) AS u2 ( id, status )
 		WHERE
-			u2.id = u.id;`,
+			u2.id = u.id;
+	`,
 		self.Src.Table, buf.String(),
 	)
 	var r, err = self.Src.Exec(query)

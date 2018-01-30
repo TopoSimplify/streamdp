@@ -4,58 +4,25 @@ import (
 	"time"
 	"log"
 	"fmt"
-	"bytes"
 	"math/rand"
 	"simplex/db"
 	"simplex/dp"
 	"simplex/rng"
 	"simplex/pln"
-	"simplex/node"
-	"text/template"
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/common"
 )
 
-const ServerCfg = "/home/titus/01/godev/src/simplex/streamdp/test/src.toml"
-
-var onlineTemplate *template.Template
-
-var onlineTblTemplate = `
-CREATE TABLE IF NOT EXISTS {{.Table}} (
-    id  SERIAL NOT NULL,
-    i INT NOT NULL,
-    j INT NOT NULL,
-    size INT CHECK (size > 0),
-    fid INT NOT NULL,
-    part INT NOT NULL,
-    node TEXT NOT NULL,
-    geom GEOMETRY(Geometry, {{.SRID}}) NOT NULL,
-    status INT DEFAULT 0,
-    CONSTRAINT pid_{{.Table}} PRIMARY KEY (id),
-	CONSTRAINT u_constraint_{{.Table}} UNIQUE (fid, i, j)
-) WITH (OIDS=FALSE);
-CREATE INDEX idx_i_{{.Table}} ON {{.Table}} (i);
-CREATE INDEX idx_j_{{.Table}} ON {{.Table}} (j);
-CREATE INDEX idx_size_{{.Table}} ON {{.Table}} (size);
-CREATE INDEX idx_fid_{{.Table}} ON {{.Table}} (fid);
-CREATE INDEX idx_part_{{.Table}} ON {{.Table}} (part);
-CREATE INDEX idx_status_{{.Table}} ON {{.Table}} (status);
-CREATE INDEX gidx_{{.Table}} ON {{.Table}} USING GIST (geom);
-`
+const ServerCfg = "/home/resson/01/godev/src/simplex/streamdp/resource/src.toml"
+const TestDBName = "test_online_db"
+const TestTable = "node_tbl"
 
 func init() {
 	var err error
-	onlineTemplate, err = template.New("online_table").Parse(onlineTblTemplate)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	rand.Seed(time.Now().UnixNano())
-}
-
-func printNodes(nodes []*db.Node) {
-	for _, h := range nodes {
-		fmt.Println(h.WTK)
-	}
 }
 
 func linearCoords(wkt string) []*geom.Point {
@@ -73,26 +40,6 @@ func createNodes(indxs [][]int, coords []*geom.Point) []*db.Node {
 		hulls = append(hulls, n)
 	}
 	return hulls
-}
-
-//New Node
-func newNodeFromPolyline(polyline *pln.Polyline, rng *rng.Range, gfn geom.GeometryFn) *node.Node {
-	return node.New(polyline.SubCoordinates(rng), rng, gfn)
-}
-
-func createOnlineTable(src *db.DataSrc, cfg *ServerConfig) error {
-	var query bytes.Buffer
-	var err = onlineTemplate.Execute(&query, cfg)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	var tblSQl = fmt.Sprintf(`DROP TABLE IF EXISTS %v CASCADE;`, cfg.Table)
-	_, err = src.Exec(tblSQl)
-	if err != nil {
-		log.Panic(err)
-	}
-	_, err = src.Exec(query.String())
-	return err
 }
 
 func insertNodesIntoOnlineTable(src *db.DataSrc, nds []*db.Node) {
