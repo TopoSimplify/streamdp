@@ -11,7 +11,6 @@ import (
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/offset"
 	"simplex/streamdp/mtrafic"
-	"fmt"
 )
 
 type OPWType int
