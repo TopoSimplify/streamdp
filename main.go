@@ -2,34 +2,28 @@ package main
 
 import (
 	"os"
+	"fmt"
 	"flag"
 	"runtime"
 	"os/signal"
-	"simplex/opts"
 	"simplex/offset"
-	"fmt"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 
 var Port int
 var Host string
 
-const DebugMode     = 0
-const ReleaseMode   = 1
-const Error         = 500
-const Success       = 200
+const DebugMode = 0
+const ReleaseMode = 1
+const Error = 500
+const Success = 200
 
-var SimpleHistory *SimpleMap
 var VesselHistory *History
-var Options *opts.Opts
 var SimplificationType = NOPW
 var Offseter = offset.MaxOffset
 
 func init() {
 	VesselHistory = NewHistory()
-	SimpleHistory = NewSimpleMap()
-	Options = &opts.Opts{Threshold: 5000}
-
 	flag.IntVar(&Port, "port", 8000, "host port")
 	flag.StringVar(&Host, "host", "localhost", "host address")
 }

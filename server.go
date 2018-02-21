@@ -30,10 +30,10 @@ type Server struct {
 }
 
 func NewServer(address string, mode string) *Server {
-	var exit = make(chan struct{})
-	var inputStream = make(chan []*db.Node, InputBufferSize)
-	var simpleStream = make(chan []int)
-	var exitWg = &sync.WaitGroup{}
+	var exit          = make(chan struct{})
+	var inputStream   = make(chan []*db.Node, InputBufferSize)
+	var simpleStream  = make(chan []int)
+	var exitWg        = &sync.WaitGroup{}
 	exitWg.Add(0)
 
 	var server = &Server{

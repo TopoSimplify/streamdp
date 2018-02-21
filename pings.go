@@ -8,6 +8,7 @@ import (
 func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 	var id int
 	var nds = make([]*db.Node, 0)
+	var options = server.OnlineDP.Options
 
 	if msg.KeepAlive && len(msg.Ping) > 0 {
 		var ping = &mtrafic.Ping{}
@@ -17,7 +18,7 @@ func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 		}
 
 		id = ping.MMSI
-		var node = VesselHistory.Update(id, ping)
+		var node = VesselHistory.Update(id, ping, options)
 		//node
 		if node != nil {
 			nds = append(nds, node)

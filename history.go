@@ -4,6 +4,7 @@ import (
 	"sync"
 	"simplex/db"
 	"simplex/streamdp/mtrafic"
+	"simplex/opts"
 )
 
 type History struct {
@@ -34,12 +35,12 @@ func (h *History) MarkDone(id int) []*db.Node {
 	return nodes
 }
 
-func (h *History) Update(id int, ping *mtrafic.Ping) *db.Node {
+func (h *History) Update(id int, ping *mtrafic.Ping, options *opts.Opts) *db.Node {
 	var node *db.Node
 	h.Lock()
 	//----------------------------------------------
 		if h.m[id] == nil {
-			h.m[id] = NewOPW(Options, SimplificationType, Offseter)
+			h.m[id] = NewOPW(options, SimplificationType, Offseter)
 			h.m[id].Id = id
 		}
 		node = h.m[id].Push(ping)

@@ -11,6 +11,7 @@ import (
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/offset"
 	"simplex/streamdp/mtrafic"
+	"fmt"
 )
 
 type OPWType int
@@ -68,9 +69,9 @@ func (self *OPW) ScoreRelation(val float64) bool {
 }
 
 func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
+	var I = 0
 	var node *db.Node
 	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
-	var I = 0
 	if self.cache.size() > 0 {
 		I = self.cache.lastIndex() + 1
 	}
