@@ -22,7 +22,7 @@ const (
 	NOPW              OPWType = iota
 	BOPW
 	MinimumCacheLimit = 3
-	MaximumCacheLimit = 300
+	MaximumCacheLimit = 1000000
 )
 
 const (
@@ -107,7 +107,7 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 
 	var index, val = OPWScoreFn(self.cache)
 
-	if self.ScoreRelation(val) {
+	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit  {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {
