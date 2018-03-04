@@ -6,7 +6,7 @@ import (
 	"github.com/intdxdt/geom"
 )
 
-func homoSplit(segment *geom.Segment , coordinates []*geom.Point) (int, int) {
+func homoSplit(segment *geom.Segment, coordinates []*geom.Point) (int, int) {
 	var idx = 1
 	var i, j = -1, -1
 	var n = len(coordinates) - 1
@@ -30,7 +30,7 @@ func homoSplit(segment *geom.Segment , coordinates []*geom.Point) (int, int) {
 	return i, j
 }
 
-func homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
+func homotopy(coordinates []*geom.Point, g geom.Geometry) bool {
 	var bln = true
 	var ac, bc []*geom.Point
 	var n = len(coordinates) - 1
@@ -39,8 +39,10 @@ func homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
 
 	if i < 0 && j < 0 {
 		var gac = geom.NewPolygon(coordinates)
-		for k, n := 0, len(gs); bln && k < n; k++ {
-			bln = !gac.Intersects(gs[k])
+		if gac.Intersects(g) && segment.Intersects(g){
+			bln = true
+		}else {
+			bln = !gac.Intersects(g)
 		}
 	} else if i > 0 && j > 0 {
 		ln := geom.NewSegment(coordinates[i], coordinates[j])
@@ -53,9 +55,7 @@ func homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
 		fmt.Println(gac.WKT())
 		fmt.Println(gbc.WKT())
 
-		for k, n := 0, len(gs); bln && k < n; k++ {
-			bln = !gac.Intersects(gs[k]) && !gbc.Intersects(gs[k])
-		}
+			bln = !gac.Intersects(g) && !gbc.Intersects(g)
 	} else {
 		bln = false
 		panic("unhandled condition ")
@@ -72,4 +72,10 @@ func main() {
 	var coords = geom.NewLineStringFromWKT(wkt).Coordinates()
 	var bln = homotopy(coords, g)
 	fmt.Println(bln)
+
+
+	coords = []*geom.Point{{2, 2}, {5, 2}, {7, 2}, {9, 2}}
+	var lnconst = geom.NewLineString([]*geom.Point{{3, 2}, {6, 2}, {6.5, 2}})
+	var res = homotopy(coords, lnconst)
+	fmt.Println(res)
 }

@@ -91,7 +91,11 @@ func Homotopy(coordinates []*geom.Point, g geom.Geometry) bool {
 
 	if i < 0 && j < 0 {
 		var gac = geom.NewPolygon(coordinates)
-		bln = !gac.Intersects(g)
+		if gac.Intersects(g) && segment.Intersects(g) {
+			bln = true
+		} else {
+			bln = !gac.Intersects(g)
+		}
 	} else if i > 0 && j > 0 {
 		ln := geom.NewSegment(coordinates[i], coordinates[j])
 		inters := segment.Intersection(ln)
@@ -100,7 +104,13 @@ func Homotopy(coordinates []*geom.Point, g geom.Geometry) bool {
 		bc = append([]*geom.Point{inters[0]}, coordinates[j:]...)
 		var gac, gbc = geom.NewPolygon(ac), geom.NewPolygon(bc)
 
-		bln = !gac.Intersects(g) && !gbc.Intersects(g)
+		var blnSegInters = segment.Intersects(g)
+		if (gac.Intersects(g) && blnSegInters) || (gbc.Intersects(g) && blnSegInters) {
+			bln = true
+		} else {
+			bln = !gac.Intersects(g) && !gbc.Intersects(g)
+		}
+
 	} else {
 		bln = false
 		panic("unhandled condition ")
