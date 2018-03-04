@@ -82,7 +82,7 @@ func homoSplit(segment *geom.Segment, coordinates []*geom.Point) (int, int) {
 	return i, j
 }
 
-func Homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
+func Homotopy(coordinates []*geom.Point, g geom.Geometry) bool {
 	var bln = true
 	var ac, bc []*geom.Point
 	var n = len(coordinates) - 1
@@ -91,9 +91,7 @@ func Homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
 
 	if i < 0 && j < 0 {
 		var gac = geom.NewPolygon(coordinates)
-		for k, n := 0, len(gs); bln && k < n; k++ {
-			bln = !gac.Intersects(gs[k])
-		}
+		bln = !gac.Intersects(g)
 	} else if i > 0 && j > 0 {
 		ln := geom.NewSegment(coordinates[i], coordinates[j])
 		inters := segment.Intersection(ln)
@@ -102,9 +100,7 @@ func Homotopy(coordinates []*geom.Point, gs ...geom.Geometry) bool {
 		bc = append([]*geom.Point{inters[0]}, coordinates[j:]...)
 		var gac, gbc = geom.NewPolygon(ac), geom.NewPolygon(bc)
 
-		for k, n := 0, len(gs); bln && k < n; k++ {
-			bln = !gac.Intersects(gs[k]) && !gbc.Intersects(gs[k])
-		}
+		bln = !gac.Intersects(g) && !gbc.Intersects(g)
 	} else {
 		bln = false
 		panic("unhandled condition ")
