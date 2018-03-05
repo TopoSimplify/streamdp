@@ -5,3 +5,4 @@
 
 # merge by resolving false negative collapse
 
+# state that hull has to be locally collapsible, global will improve results
