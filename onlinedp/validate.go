@@ -47,6 +47,7 @@ func (self *OnlineDP) ValidateContextRelation(hull *db.Node, selections *[]*db.N
 		}
 
 		if bln && self.Options.DirRelation {
+			var neibs = self.FindNodeNeighbours(hull, self.Independent)
 			bln = BySideRelation(hull, cg)
 		}
 	}
