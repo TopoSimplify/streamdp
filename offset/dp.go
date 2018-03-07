@@ -1,46 +1,62 @@
 package offset
 
 import (
-	"simplex/rng"
+	"math"
 	"github.com/intdxdt/geom"
 	"github.com/intdxdt/vect"
+	"github.com/intdxdt/cart"
 )
 
 //euclidean offset distance from dp - anchor line [i, j] to maximum
 //vertex at i < k <= j - not maximum offset is may not  be perpendicular
-func MaxOffset(polyline []*geom.Point) (int, float64) {
-	var xrange = rng.NewRange(0, len(polyline)-1)
-	var seg = geom.NewSegment(polyline[xrange.I], polyline[xrange.J])
-	var index, offset = xrange.J, 0.0
-
-	if xrange.Size() > 1 {
-		for _, k := range xrange.ExclusiveStride(1) {
-			dist := seg.DistanceToPoint(polyline[k])
-			if dist >= offset {
-				index, offset = k, dist
-			}
+func MaxOffset(coordinates []*geom.Point) (int, float64) {
+	var n = len(coordinates) - 1
+	var index, offset = n, 0.0
+	if n <= 1 {
+		return index, offset
+	}
+	var dist float64
+	var a, b = coordinates[0], coordinates[n]
+	for k := 1; k < n; k++ { //exclusive range between 0 < k < n
+		dist = geom.DistanceToPoint(a, b, coordinates[k])
+		if dist >= offset {
+			index, offset = k, dist
 		}
 	}
 	return index, offset
 }
 
 //computes Synchronized Euclidean Distance
-func MaxSEDOffset(polyline []*geom.Point) (int, float64) {
-	var t = 2
-	var xrange = rng.NewRange(0, len(polyline)-1)
-	var index, offset = xrange.J, 0.0
-	var a, b = polyline[xrange.I], polyline[xrange.J]
-	var opts = &vect.Options{A: a, B: b, At: &a[t], Bt: &b[t]}
-	var segvect = vect.NewVect(opts)
+func MaxSEDOffset(coordinates []*geom.Point) (int, float64) {
+	var n = len(coordinates) - 1
+	var index, offset = n, 0.0
+	if n <= 1 {
+		return index, offset
+	}
 
-	if xrange.Size() > 1 {
-		for _, k := range xrange.ExclusiveStride(1) {
-			var pnt = polyline[k]
-			sedvect := segvect.SEDVector(pnt, pnt[t])
-			dist    := sedvect.Magnitude()
-			if dist >= offset {
-				index, offset = k, dist
-			}
+	var pt *geom.Point
+	var dist, m, ptx, pty, ptt, px, py float64
+
+	var a, b = coordinates[0], coordinates[n]
+	var ax, ay = a[geom.X], a[geom.Y]
+	var at, bt = a[geom.Z], b[geom.Z]
+
+	var v = vect.NewVector(a, b)
+	var mij = v.Magnitude()
+	var fb = cart.Direction(v)
+	var vx, vy = math.Cos(fb), math.Sin(fb)
+	var dt = bt - at
+
+	for k := 1; k < n; k++ { //exclusive range between 0 < k < n
+		pt = coordinates[k]
+		ptx, pty, ptt = pt[geom.X], pt[geom.Y], pt[geom.Z]
+
+		m = (mij / dt) * (ptt - at)
+		px, py = ax+(m*vx), ay+(m*vy)
+		dist = math.Hypot(ptx-px, pty-py)
+
+		if dist >= offset {
+			index, offset = k, dist
 		}
 	}
 	return index, offset

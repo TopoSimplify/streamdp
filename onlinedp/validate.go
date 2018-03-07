@@ -32,24 +32,18 @@ func (self *OnlineDP) ValidateContextRelation(hull *db.Node, selections *[]*db.N
 	}
 	var bln = true
 	// find context neighbours - if valid
-	var ctxs = self.FindContextNeighbours(hull.WTK, self.Options.MinDist)
-	for _, cg := range ctxs {
-		if !bln {
-			break
-		}
+	var contexts = self.FindContextNeighbours(hull.WTK, self.Options.MinDist)
 
-		if bln && self.Options.GeomRelation {
-			bln = ByGeometricRelation(hull, cg)
-		}
+	if bln && self.Options.GeomRelation {
+		bln = ByGeometricRelation(hull, contexts)
+	}
 
-		if bln && self.Options.DistRelation {
-			bln = ByMinDistRelation(self.Options, hull, cg)
-		}
+	if bln && self.Options.DistRelation {
+		bln = ByMinDistRelation(self.Options, hull, contexts)
+	}
 
-		if bln && self.Options.DirRelation {
-			var neibs = self.FindNodeNeighbours(hull, self.Independent)
-			bln = BySideRelation(hull, cg)
-		}
+	if bln && self.Options.DirRelation {
+		bln = BySideRelation(hull, contexts)
 	}
 
 	if !bln {
