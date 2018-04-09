@@ -7,24 +7,27 @@ import (
 )
 
 //distance relate
-func IsDistRelateValid(options *opts.Opts, hull *db.Node, ctx *ctx.ContextGeometry) bool {
-	var mindist = options.MinDist
+func IsDistRelateValid(options *opts.Opts, hull *db.Node, contexts *ctx.ContextGeometries) bool {
+	var minDistance = options.MinDist
 	var seg = hull.Segment()
 	var lnGeom = hull.Polyline().Geometry
-
+	var original, simple float64
 	var segGeom = seg
-	var ctxGeom = ctx.Geom
+	var g *ctx.ContextGeometry
 
-	var origDist = lnGeom.Distance(ctxGeom) // original relate
-	var dr = segGeom.Distance(ctxGeom)      // new relate
+	var bln = true
+	var geometries = contexts.DataView()
 
-	bln := dr >= mindist
-	if (!bln) && origDist < mindist { //if not bln and origDist <= mindist:
+	for i, n := 0, contexts.Len(); bln && i < n; i++ {
+		g = geometries[i]
+		original = lnGeom.Distance(g.Geom)
+		simple = segGeom.Distance(g.Geom)
+
 		//if original violates constraint, then simple can
 		// >= than original or <= original, either way should be true
-		// [original & simple] <= mindist, then simple cannot be  simple >= mindist no matter
+		// [original & simple] <= minDistance, then simple cannot be  simple >= minDistance no matter
 		// how many vertices introduced
-		bln = true
+		bln = (simple >= minDistance) || (original < minDistance)
 	}
 	return bln
 }

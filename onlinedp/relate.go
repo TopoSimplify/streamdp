@@ -6,14 +6,14 @@ import (
 	"simplex/opts"
 )
 
-func ByGeometricRelation(hull *db.Node, cg *ctx.ContextGeometry) bool {
-	return IsGeomRelateValid(hull, cg)
+func ByGeometricRelation(hull *db.Node, contexts *ctx.ContextGeometries) bool {
+	return IsGeomRelateValid(hull, contexts)
 }
 
-func ByMinDistRelation(options *opts.Opts, hull *db.Node, cg *ctx.ContextGeometry) bool {
-	return IsDistRelateValid(options, hull, cg)
+func ByMinDistRelation(options *opts.Opts, hull *db.Node, contexts *ctx.ContextGeometries) bool {
+	return IsDistRelateValid(options, hull, contexts)
 }
 
-func BySideRelation(hull *db.Node, cg *ctx.ContextGeometry) bool {
-	return IsDirRelateValid(hull, cg)
+func BySideRelation(hull *db.Node, contexts *ctx.ContextGeometries) bool {
+	return IsDirRelateValid(hull, contexts)
 }

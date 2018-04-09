@@ -3,22 +3,28 @@ package onlinedp
 import (
 	"simplex/db"
 	"simplex/ctx"
+	"simplex/node"
 )
 
-//geometry relate
-func IsGeomRelateValid(hull *db.Node, ctx *ctx.ContextGeometry) bool {
+//Checks geometric relation to other context geometries
+func IsGeomRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
 	var seg = hull.Segment()
-	var lnGeom  = hull.Polyline().Geometry
+	var lnGeom = hull.Polyline().Geometry
 	var segGeom = seg
-	var ctxGeom = ctx.Geom
-
-	var lnGInter = lnGeom.Intersects(ctxGeom)
-	var segGInter = segGeom.Intersects(ctxGeom)
+	var lnGInter, segGInter bool
+	var g *ctx.ContextGeometry
 
 	var bln = true
-	if (segGInter && !lnGInter) || (!segGInter && lnGInter) {
-		bln = false
+	var geometries = contexts.DataView()
+
+	for i, n := 0, contexts.Len(); bln && i < n; i++ {
+		g = geometries[i]
+		lnGInter = lnGeom.Intersects(g.Geom)
+		segGInter = segGeom.Intersects(g.Geom)
+
+		bln = !((segGInter && !lnGInter) || (!segGInter && lnGInter) )
 	}
-	// both intersects & disjoint
+
 	return bln
 }
+
