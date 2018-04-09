@@ -43,7 +43,7 @@ func MaxSEDOffset(coordinates []*geom.Point) (int, float64) {
 
 	var v = vect.NewVector(a, b)
 	var mij = v.Magnitude()
-	var fb = cart.Direction(v)
+	var fb = cart.Direction(v[0],v[1])
 	var vx, vy = math.Cos(fb), math.Sin(fb)
 	var dt = bt - at
 
