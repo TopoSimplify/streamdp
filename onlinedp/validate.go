@@ -3,7 +3,6 @@ package onlinedp
 import (
 	"simplex/db"
 	"simplex/rng"
-	"simplex/ctx"
 )
 
 func (self *OnlineDP) ValidateMerge(hull *db.Node, excludeRanges ...*rng.Range) bool {
@@ -33,20 +32,19 @@ func (self *OnlineDP) ValidateContextRelation(hull *db.Node, selections *[]*db.N
 	}
 	var bln = true
 	// find context neighbours - if valid
-	var ctxs = self.FindContextNeighbours(hull.WTK, self.Options.MinDist)
-	var ctxtgeoms = (&ctx.ContextGeometries{}).SetData(ctxs)
+
+	var contexts = self.FindContextNeighbours(hull.WTK, self.Options.MinDist)
 
 	if bln && self.Options.GeomRelation {
-		bln = ByGeometricRelation(hull, ctxtgeoms)
+		bln = ByGeometricRelation(hull, contexts)
 	}
 
 	if bln && self.Options.DistRelation {
-		bln = ByMinDistRelation(self.Options, hull, ctxtgeoms)
+		bln = ByMinDistRelation(self.Options, hull, contexts)
 	}
 
 	if bln && self.Options.DirRelation {
-		var neibs = self.FindNodeNeighbours(hull, self.Independent)
-		bln = BySideRelation(hull, ctxtgeoms)
+		bln = BySideRelation(hull, contexts)
 	}
 
 	if !bln {

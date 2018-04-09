@@ -1,9 +1,9 @@
 package onlinedp
 
 import (
+	"simplex/db"
 	"simplex/ctx"
 	"simplex/opts"
-	"simplex/db"
 )
 
 //distance relate

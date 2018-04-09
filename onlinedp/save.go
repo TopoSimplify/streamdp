@@ -2,12 +2,12 @@ package onlinedp
 
 import (
 	"fmt"
+	"log"
 	"bytes"
 	"simplex/db"
 	"simplex/streamdp/pt"
 	"github.com/intdxdt/geom"
 	"simplex/streamdp/common"
-	"log"
 )
 
 //obj.createOutputOnlineTable()

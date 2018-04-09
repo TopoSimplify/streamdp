@@ -105,10 +105,10 @@ loopRow:
 }
 
 //find context neighbours
-func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) []*ctx.ContextGeometry {
-	var ctxs []*ctx.ContextGeometry
+func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) *ctx.ContextGeometries {
+	var contexts = ctx.NewContexts()
 	if self.Const == nil {
-		return ctxs
+		return contexts
 	}
 	var query = fmt.Sprintf(`
 			SELECT ST_AsGeoJson(%v)
@@ -132,10 +132,10 @@ func (self *OnlineDP) FindContextNeighbours(queryWKT string, dist float64) []*ct
 		h.Scan(&g)
 		var gs = geometries(g)
 		for _, o := range gs {
-			ctxs = append(ctxs, ctx.New(o, 0, -1).AsContextNeighbour())
+			contexts.Push(ctx.New(o, 0, -1).AsContextNeighbour())
 		}
 	}
-	return ctxs
+	return contexts
 }
 
 func geometries(g *geojson.Geometry) []geom.Geometry {
