@@ -43,7 +43,7 @@ func (scfg *ServerConfig) DPOptions() *opts.Opts {
 		Threshold:              scfg.Threshold,
 		MinDist:                scfg.MinDist,
 		RelaxDist:              scfg.RelaxDist,
-		KeepSelfIntersects:     false,
+		PlanarSelf:             false,
 		AvoidNewSelfIntersects: scfg.AvoidNewSelfIntersects,
 		GeomRelation:           scfg.GeomRelation,
 		DistRelation:           scfg.DistRelation,
