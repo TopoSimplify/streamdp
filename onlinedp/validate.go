@@ -32,6 +32,7 @@ func (self *OnlineDP) ValidateContextRelation(hull *db.Node, selections *[]*db.N
 	}
 	var bln = true
 	// find context neighbours - if valid
+
 	var contexts = self.FindContextNeighbours(hull.WTK, self.Options.MinDist)
 
 	if bln && self.Options.GeomRelation {

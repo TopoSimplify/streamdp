@@ -5,7 +5,7 @@ import (
 	"simplex/ctx"
 )
 
-//geometry relate
+//Checks geometric relation to other context geometries
 func IsGeomRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
 	var seg = hull.Segment()
 	var lnGeom = hull.Polyline().Geometry

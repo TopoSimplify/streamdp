@@ -1,10 +1,10 @@
 package onlinedp
 
 import (
-	"github.com/franela/goblin"
 	"time"
-	"simplex/rng"
 	"testing"
+	"simplex/rng"
+	"github.com/franela/goblin"
 )
 
 func TestContig(t *testing.T) {
