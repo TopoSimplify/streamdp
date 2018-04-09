@@ -3,7 +3,6 @@ package onlinedp
 import (
 	"simplex/db"
 	"simplex/ctx"
-	"simplex/node"
 )
 
 //Checks geometric relation to other context geometries
@@ -27,4 +26,3 @@ func IsGeomRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
 
 	return bln
 }
-

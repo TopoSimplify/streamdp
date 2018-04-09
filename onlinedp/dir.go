@@ -6,6 +6,6 @@ import (
 )
 
 //direction relate
-func IsDirRelateValid(hull *db.Node, ctx *ctx.ContextGeometry) bool {
-	return DirectionRelate(hull.Coordinates, ctx.Geom)
+func IsDirRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
+	return DirectionRelate(hull.Coordinates, contexts)
 }
