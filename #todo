@@ -1,8 +1,0 @@
-# during simplification , use only node collapse as criteria
-
-# collapse regions based on current information
- > update region collapse based on new incoming information
-
-# merge by resolving false negative collapse
-
-# state that hull has to be locally collapsible, global will improve results
