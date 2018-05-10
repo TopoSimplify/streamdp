@@ -1,0 +1,17 @@
+ServerAddress          = "localhost:8000"
+DBHost                 = "localhost"
+User                   = "titus"
+Password               = "titus"
+Database               = "trajdb"
+Table                  = "mmpings"
+SimplificationType      = "NOPW"
+SRID                   = 3857
+Dim                    = 2
+Threshold              = 0.0
+MinDist                = 100.0
+RelaxDist              = 10.0
+AvoidNewSelfIntersects = false
+GeomRelation           = false
+DistRelation           = false
+DirRelation            = false
+
