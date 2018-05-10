@@ -1,8 +1,8 @@
 package onlinedp
 
 import (
-	"simplex/db"
-	"simplex/ctx"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/ctx"
 )
 
 //direction relate

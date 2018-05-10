@@ -5,13 +5,13 @@ import (
 	"time"
 	"sort"
 	"testing"
-	"simplex/db"
-	"simplex/rng"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/rng"
 	"database/sql"
-	"simplex/opts"
-	"simplex/streamdp/offset"
+	"github.com/TopoSimplify/opts"
+	"github.com/TopoSimplify/streamdp/offset"
 	"github.com/franela/goblin"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 func TestOnline(t *testing.T) {

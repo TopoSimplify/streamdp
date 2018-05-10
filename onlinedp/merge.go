@@ -2,9 +2,9 @@ package onlinedp
 
 import (
 	"log"
-	"simplex/db"
-	"simplex/rng"
-	"simplex/common"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/rng"
+	"github.com/TopoSimplify/common"
 	"github.com/intdxdt/geom"
 )
 

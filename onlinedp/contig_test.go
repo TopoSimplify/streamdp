@@ -3,7 +3,7 @@ package onlinedp
 import (
 	"time"
 	"testing"
-	"simplex/rng"
+	"github.com/TopoSimplify/rng"
 	"github.com/franela/goblin"
 )
 

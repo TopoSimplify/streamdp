@@ -3,12 +3,12 @@ package onlinedp
 import (
 	"time"
 	"testing"
-	"simplex/pln"
-	"simplex/opts"
-	"simplex/ctx"
+	"github.com/TopoSimplify/pln"
+	"github.com/TopoSimplify/opts"
+	"github.com/TopoSimplify/ctx"
 	"github.com/intdxdt/geom"
 	"github.com/franela/goblin"
-	"simplex/dp"
+	"github.com/TopoSimplify/dp"
 	"fmt"
 )
 

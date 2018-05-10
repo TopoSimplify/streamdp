@@ -3,7 +3,7 @@ package onlinedp
 import (
 	"time"
 	"testing"
-	"simplex/ctx"
+	"github.com/TopoSimplify/ctx"
 	"github.com/franela/goblin"
 	"github.com/intdxdt/geom"
 )

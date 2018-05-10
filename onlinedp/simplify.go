@@ -3,7 +3,7 @@ package onlinedp
 import (
 	"fmt"
 	"log"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 func (self *OnlineDP) Simplify(fid int) {

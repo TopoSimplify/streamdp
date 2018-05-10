@@ -1,8 +1,8 @@
 package onlinedp
 
 import (
-	"simplex/ctx"
-	"simplex/homotopy"
+	"github.com/TopoSimplify/ctx"
+	"github.com/TopoSimplify/homotopy"
 	"github.com/intdxdt/geom"
 )
 

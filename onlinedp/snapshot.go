@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"bytes"
-	"simplex/db"
-	"simplex/dp"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/dp"
+	"github.com/TopoSimplify/streamdp/common"
 	"github.com/intdxdt/fan"
 )
 

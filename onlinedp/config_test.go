@@ -2,9 +2,9 @@ package onlinedp
 
 import (
 	"log"
-	"simplex/db"
+	"github.com/TopoSimplify/db"
 	"github.com/naoina/toml"
-	"simplex/streamdp/config"
+	"github.com/TopoSimplify/streamdp/config"
 	"github.com/intdxdt/fileutil"
 )
 

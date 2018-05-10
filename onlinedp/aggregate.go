@@ -3,9 +3,9 @@ package onlinedp
 import (
 	"fmt"
 	"log"
-	"simplex/db"
-	"simplex/dp"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/dp"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 type LnrFeat struct{ FID int }

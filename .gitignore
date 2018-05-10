@@ -2,3 +2,7 @@
 *.iml
 data/
 xdata/
+server
+server.exe
+benchmark
+benchmark.exe

@@ -1,8 +1,8 @@
 package onlinedp
 
 import (
-	"simplex/db"
-	"simplex/rng"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/rng"
 )
 
 func (self *OnlineDP) ValidateMerge(hull *db.Node, excludeRanges ...*rng.Range) bool {

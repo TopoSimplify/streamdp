@@ -1,7 +1,7 @@
 package onlinedp
 
 import (
-	"simplex/db"
+	"github.com/TopoSimplify/db"
 )
 
 //Checks if two nodes: nopde `a` and `b` are contiguous

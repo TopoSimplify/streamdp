@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"bytes"
-	"simplex/db"
-	"simplex/streamdp/pt"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/pt"
 	"github.com/intdxdt/geom"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 //obj.createOutputOnlineTable()

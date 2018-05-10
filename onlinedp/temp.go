@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"log"
-	"simplex/streamdp/enc"
+	"github.com/TopoSimplify/streamdp/enc"
 )
 
 func (self *OnlineDP) tempNodeIDTableName(fid int) string {

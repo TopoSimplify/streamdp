@@ -5,15 +5,15 @@ import (
 	"log"
 	"fmt"
 	"math/rand"
-	"simplex/db"
-	"simplex/dp"
-	"simplex/rng"
-	"simplex/pln"
 	"github.com/intdxdt/geom"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/dp"
+	"github.com/TopoSimplify/rng"
+	"github.com/TopoSimplify/pln"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
-const ServerCfg = "/home/resson/01/godev/src/simplex/streamdp/resource/src.toml"
+const ServerCfg = "../resource/src.toml"
 const TestDBName = "test_online_db"
 const TestTable = "node_tbl"
 
