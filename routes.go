@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	_ "github.com/lib/pq"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 

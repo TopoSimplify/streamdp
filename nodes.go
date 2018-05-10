@@ -1,6 +1,6 @@
 package main
 
-import "simplex/db"
+import "github.com/TopoSimplify/db"
 
 type DBNodes []*db.Node
 

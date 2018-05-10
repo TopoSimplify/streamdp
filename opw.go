@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 	"sort"
-	"simplex/db"
-	"simplex/lnr"
-	"simplex/rng"
-	"simplex/opts"
-	"simplex/streamdp/pt"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/lnr"
+	"github.com/TopoSimplify/rng"
+	"github.com/TopoSimplify/opts"
+	"github.com/TopoSimplify/streamdp/pt"
 	"github.com/intdxdt/geom"
-	"simplex/streamdp/offset"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/offset"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 )
 
 type OPWType int

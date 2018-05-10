@@ -2,8 +2,8 @@ package config
 
 import (
 	"log"
-	"simplex/db"
-	"simplex/opts"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/opts"
 	"github.com/naoina/toml"
 )
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync"
 	"spinner"
-	"simplex/data/store"
+	"github.com/TopoSimplify/data/store"
 	"github.com/intdxdt/fan"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/intdxdt/fileglob"
 )
 

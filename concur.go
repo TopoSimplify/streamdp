@@ -7,8 +7,8 @@ import (
 	"time"
 	"strings"
 	"spinner"
-	"simplex/db"
-	"simplex/streamdp/common"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 const (

@@ -3,7 +3,7 @@ package offset
 import (
 	"time"
 	"testing"
-	"simplex/streamdp/pt"
+	"github.com/TopoSimplify/streamdp/pt"
 	"github.com/intdxdt/geom"
 	"github.com/intdxdt/math"
 	"github.com/franela/goblin"

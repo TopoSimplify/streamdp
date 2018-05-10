@@ -1,7 +1,7 @@
 package pt
 
 import (
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/intdxdt/geom"
 )
 

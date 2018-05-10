@@ -1,7 +1,7 @@
 package offset
 
 import (
-	pnt "simplex/streamdp/pt"
+	pnt "github.com/TopoSimplify/streamdp/pt"
 	"github.com/intdxdt/geom"
 	"github.com/intdxdt/vect"
 	"github.com/intdxdt/cart"

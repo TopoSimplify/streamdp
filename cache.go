@@ -1,7 +1,7 @@
 package main
 
 import (
-	"simplex/streamdp/pt"
+	"github.com/TopoSimplify/streamdp/pt"
 )
 
 type Cache []*pt.Pt

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"simplex/db"
+	"github.com/TopoSimplify/db"
 	_ "github.com/lib/pq"
-	"simplex/streamdp/config"
-	"simplex/streamdp/onlinedp"
+	"github.com/TopoSimplify/streamdp/config"
+	"github.com/TopoSimplify/streamdp/onlinedp"
 	"sync"
 )
 

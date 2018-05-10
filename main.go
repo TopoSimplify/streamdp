@@ -6,7 +6,7 @@ import (
 	"flag"
 	"runtime"
 	"os/signal"
-	"simplex/offset"
+	"github.com/TopoSimplify/offset"
 	"gopkg.in/gin-gonic/gin.v1"
 )
 

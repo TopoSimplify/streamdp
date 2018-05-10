@@ -7,11 +7,11 @@ import (
 	"time"
 	"strings"
 	"runtime"
-	"simplex/db"
+	"github.com/TopoSimplify/db"
 	"database/sql"
-	"simplex/streamdp/common"
-	"simplex/streamdp/onlinedp"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/common"
+	"github.com/TopoSimplify/streamdp/onlinedp"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/intdxdt/random"
 )
 

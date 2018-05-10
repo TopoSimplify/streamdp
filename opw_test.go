@@ -3,10 +3,10 @@ package main
 import (
 	"time"
 	"testing"
-	"simplex/db"
-	"simplex/opts"
-	"simplex/streamdp/offset"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/opts"
+	"github.com/TopoSimplify/streamdp/offset"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/franela/goblin"
 )
 

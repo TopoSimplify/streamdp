@@ -9,9 +9,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"github.com/naoina/toml"
-	"simplex/streamdp/config"
-	"simplex/streamdp/common"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/config"
+	"github.com/TopoSimplify/streamdp/common"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 )
 
 var Port int

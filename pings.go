@@ -1,8 +1,8 @@
 package main
 
 import (
-	"simplex/db"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 )
 
 func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {

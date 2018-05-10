@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"flag"
 	"time"
+	"runtime"
 	"math/rand"
-	"simplex/db"
 	"database/sql"
 	"path/filepath"
-	"simplex/streamdp/config"
-	"simplex/streamdp/common"
-	"runtime"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/config"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 var Port int

@@ -2,9 +2,9 @@ package main
 
 import (
 	"sync"
-	"simplex/db"
-	"simplex/streamdp/mtrafic"
-	"simplex/opts"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/mtrafic"
+	"github.com/TopoSimplify/opts"
 )
 
 type History struct {

@@ -5,9 +5,9 @@ import (
 	"log"
 	"time"
 	"io/ioutil"
-	"simplex/data/store"
 	"github.com/naoina/toml"
-	"simplex/streamdp/enc"
+	"github.com/TopoSimplify/data/store"
+	"github.com/TopoSimplify/streamdp/enc"
 )
 
 type CfgMsg struct {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
-	"simplex/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/pkg/errors"
 )
 
