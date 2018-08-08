@@ -17,11 +17,11 @@ func TestCmp(t *testing.T) {
 				g.Assert(r != nil).IsTrue()
 			}()
 			var coords = []*pt.Pt{
-				{Point: geom.NewPointXY(1, 2), I: 0},
-				{Point: geom.NewPointXY(3, 4), I: 1},
-				{Point: geom.NewPointXY(5, 6), I: 2},
-				{Point: geom.NewPointXY(7, 8), I: 3},
-				{Point: geom.NewPointXY(9, 10), I: 4},
+				{Point: geom.PointXY(1, 2), I: 0},
+				{Point: geom.PointXY(3, 4), I: 1},
+				{Point: geom.PointXY(5, 6), I: 2},
+				{Point: geom.PointXY(7, 8), I: 3},
+				{Point: geom.PointXY(9, 10), I: 4},
 			}
 			var cache = make(Cache, 0)
 			g.Assert(cache.size()).Equal(0)
@@ -65,11 +65,11 @@ func TestCmp(t *testing.T) {
 			g.Timeout(10 * time.Minute)
 
 			var coords = []*pt.Pt{
-				{Point: geom.NewPointXY(1, 2), I: 0},
-				{Point: geom.NewPointXY(3, 4), I: 1},
-				{Point: geom.NewPointXY(5, 6), I: 2},
-				{Point: geom.NewPointXY(7, 8), I: 3},
-				{Point: geom.NewPointXY(9, 10), I: 4},
+				{Point: geom.PointXY(1, 2), I: 0},
+				{Point: geom.PointXY(3, 4), I: 1},
+				{Point: geom.PointXY(5, 6), I: 2},
+				{Point: geom.PointXY(7, 8), I: 3},
+				{Point: geom.PointXY(9, 10), I: 4},
 			}
 			var cache = make(Cache, 0)
 			cache.append(coords...)

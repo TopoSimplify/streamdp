@@ -31,7 +31,7 @@ func TestRelate(t *testing.T) {
 			}
 			wkt := "LINESTRING ( 670 550, 680 580, 750 590, 760 630, 830 640, 870 630, 890 610, 920 580, 910 540, 890 500, 900 460, 870 420, 860 390, 810 360, 770 400, 760 420, 800 440, 810 470, 850 500, 820 560, 780 570, 760 530, 720 530, 707.3112236920351 500.3928552814154, 650 450 )"
 			coords := geom.NewLineStringFromWKT(wkt).Coordinates()
-			insDP := &dp.DouglasPeucker{Pln: pln.New(coords), Opts: options}
+			insDP := &dp.DouglasPeucker{Pln: pln.CreatePolyline(coords), Opts: options}
 			ranges := [][]int{{0, 12}, {12, 18}, {18, len(coords) - 1}}
 
 			hulls := createHulls(ranges, coords)

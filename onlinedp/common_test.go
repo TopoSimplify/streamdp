@@ -44,10 +44,10 @@ func hullGeom(coords []*geom.Point) geom.Geometry {
 }
 
 func createHulls(indxs [][]int, coords []*geom.Point) []*db.Node {
-	poly := pln.New(coords)
+	poly := pln.CreatePolyline(coords)
 	hulls := make([]*db.Node, 0)
 	for _, o := range indxs {
-		r := rng.NewRange(o[0], o[1])
+		r := rng.Range(o[0], o[1])
 		n := db.NewDBNode(poly.SubCoordinates(r), r, 1, hullGeom)
 		hulls = append(hulls, n)
 	}
@@ -55,11 +55,11 @@ func createHulls(indxs [][]int, coords []*geom.Point) []*db.Node {
 }
 
 func createNodes(indxs [][]int, coords []*geom.Point) []*db.Node {
-	poly := pln.New(coords)
+	poly := pln.CreatePolyline(coords)
 	hulls := make([]*db.Node, 0)
 	var fid = rand.Intn(100)
 	for _, o := range indxs {
-		var r = rng.NewRange(o[0], o[1])
+		var r = rng.Range(o[0], o[1])
 		//var dpnode = newNodeFromPolyline(poly, r, dp.NodeGeometry)
 		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, dp.NodeGeometry, "x7")
 		hulls = append(hulls, n)

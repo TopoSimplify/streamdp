@@ -15,13 +15,13 @@ func TestOpw(t *testing.T) {
 		g.It("should test cache", func() {
 			g.Timeout(1 * time.Hour)
 			var data = []*pt.Pt{
-				{Point: geom.NewPointXYZ(3.0, 1.6, 0.0), I: 0},
-				{Point: geom.NewPointXYZ(3.0, 2.0, 1.0), I: 0},
-				{Point: geom.NewPointXYZ(2.4, 2.8, 3.0), I: 0},
-				{Point: geom.NewPointXYZ(0.5, 3.0, 4.5), I: 0},
-				{Point: geom.NewPointXYZ(1.2, 3.2, 5.0), I: 0},
-				{Point: geom.NewPointXYZ(1.4, 2.6, 6.0), I: 0},
-				{Point: geom.NewPointXYZ(2.0, 3.5, 10.0), I: 0},
+				{Point: geom.PointXYZ(3.0, 1.6, 0.0), I: 0},
+				{Point: geom.PointXYZ(3.0, 2.0, 1.0), I: 0},
+				{Point: geom.PointXYZ(2.4, 2.8, 3.0), I: 0},
+				{Point: geom.PointXYZ(0.5, 3.0, 4.5), I: 0},
+				{Point: geom.PointXYZ(1.2, 3.2, 5.0), I: 0},
+				{Point: geom.PointXYZ(1.4, 2.6, 6.0), I: 0},
+				{Point: geom.PointXYZ(2.0, 3.5, 10.0), I: 0},
 			}
 
 			rootIndex, val := OPWMaxSEDOffset(data)

@@ -12,7 +12,7 @@ func NewLinearGeometry(id int, part int, coords [][]float64) *LinearGeometry {
 	return &LinearGeometry{
 		Id:          id,
 		Part:        part,
-		Coordinates: geom.AsPointArray(coords),
+		Coordinates: geom.AsCoordinates(coords),
 	}
 }
 

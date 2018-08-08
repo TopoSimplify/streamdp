@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/TopoSimplify/db"
 	_ "github.com/lib/pq"
+	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/streamdp/config"
 	"github.com/TopoSimplify/streamdp/onlinedp"
 	"sync"

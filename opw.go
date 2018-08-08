@@ -70,7 +70,7 @@ func (self *OPW) ScoreRelation(val float64) bool {
 func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	var I = 0
 	var node *db.Node
-	var pnt = geom.NewPointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
+	var pnt = geom.PointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
 	if self.cache.size() > 0 {
 		I = self.cache.lastIndex() + 1
 	}
@@ -188,7 +188,7 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 	}
 
 	//new node
-	return db.NewDBNode(cache, rng.NewRange(i, j), self.Id, NodeGeometry)
+	return db.NewDBNode(cache, rng.Range(i, j), self.Id, NodeGeometry)
 }
 
 func (self *OPW) cacheAsPoints() []*geom.Point {
@@ -210,7 +210,7 @@ func (self *OPW) nodeAsPoints(nd *db.Node) []*geom.Point {
 func (self *OPW) createNode() *db.Node {
 	return db.NewDBNode(
 		self.cacheAsPoints(),
-		rng.NewRange(self.anchor, self.float),
+		rng.Range(self.anchor, self.float),
 		self.Id, NodeGeometry,
 	)
 }

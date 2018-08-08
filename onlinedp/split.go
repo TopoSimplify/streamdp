@@ -15,14 +15,14 @@ func AtScoreSelection(hull *db.Node, scoreFn func([]*geom.Point) (int, float64),
 	var rg = hull.Range
 	var i, j = rg.I, rg.J
 	var k, _ = scoreFn(coordinates)
-	var rk = rg.Index(k)
+	var rk = rg.I + k
 
 	// ------------------------------------------------------------------------------------
 	var fid = hull.FID
 	var idA, idB = hull.SubNodeIds()
 	// i..[ha]..k..[hb]..j
-	var ha = db.NewDBNode(coordinates[0:k+1], rng.NewRange(i, rk), fid, gfn, idA)
-	var hb = db.NewDBNode(coordinates[k:], rng.NewRange(rk, j), fid, gfn, idB)
+	var ha = db.NewDBNode(coordinates[0:k+1], rng.Range(i, rk), fid, gfn, idA)
+	var hb = db.NewDBNode(coordinates[k:], rng.Range(rk, j), fid, gfn, idB)
 	// ------------------------------------------------------------------------------------
 
 	return ha, hb

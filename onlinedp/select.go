@@ -14,7 +14,7 @@ func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
 		return selections
 	}
 	//collinear: hull is line
-	if hull.HullType == geom.GeoType_LineString {
+	if hull.HullType == geom.GeoTypeLineString {
 		return selections
 	}
 
@@ -34,7 +34,7 @@ func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
 
 //Constrain for self-intersection as a result of simplification
 //returns boolean : is hull collapsible
-func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node, selections *[]*db.Node, excludeRanges ...*rng.Range) bool {
+func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node, selections *[]*db.Node, excludeRanges ...*rng.Rng) bool {
 	//assume hull is valid and proof otherwise
 	var bln = true
 	// find hull neighbours

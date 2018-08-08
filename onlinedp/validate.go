@@ -5,7 +5,7 @@ import (
 	"github.com/TopoSimplify/rng"
 )
 
-func (self *OnlineDP) ValidateMerge(hull *db.Node, excludeRanges ...*rng.Range) bool {
+func (self *OnlineDP) ValidateMerge(hull *db.Node, excludeRanges ...*rng.Rng) bool {
 	var bln = true
 	var sideEffects = make([]*db.Node, 0)
 

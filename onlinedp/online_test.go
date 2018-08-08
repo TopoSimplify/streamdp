@@ -115,8 +115,8 @@ func TestOnline(t *testing.T) {
 			nodes = queryNodesByStatus(src, NullState)
 			sort.Sort(db.Nodes(nodes))
 			g.Assert(len(nodes)).Equal(2)
-			g.Assert(nodes[0].Range.Equals(rng.NewRange(4, 6))).IsTrue()
-			g.Assert(nodes[1].Range.Equals(rng.NewRange(6, 9))).IsTrue()
+			g.Assert(nodes[0].Range.Equals(rng.Range(4, 6))).IsTrue()
+			g.Assert(nodes[1].Range.Equals(rng.Range(6, 9))).IsTrue()
 
 			//-------------has more deformables--------------------------------
 			g.Assert(inst.HasMoreDeformables(fid)).IsTrue()

@@ -25,10 +25,10 @@ func (self *OnlineDP) ContiguousFragmentsAtThreshold(
 }
 
 //Merge two ranges
-func Range(ra, rb *rng.Range) *rng.Range {
+func Range(ra, rb *rng.Rng) *rng.Rng {
 	var ranges = common.SortInts(append(ra.AsSlice(), rb.AsSlice()...))
 	// i...[ra]...k...[rb]...j
-	return rng.NewRange(ranges[0], ranges[len(ranges)-1])
+	return rng.Range(ranges[0], ranges[len(ranges)-1])
 }
 
 func ContiguousCoordinates(prev, next *db.Node) []*geom.Point {

@@ -58,7 +58,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	return Neighbours(node, nodes)
 }
 
-func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...*rng.Range) []*db.Node {
+func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...*rng.Rng) []*db.Node {
 	var query = `
 		SELECT id, fid, node
 		FROM  %v
@@ -160,17 +160,17 @@ func geometries(g *geojson.Geometry) []geom.Geometry {
 }
 
 func point(pt []float64) *geom.Point {
-	return geom.NewPoint(pt)
+	return geom.CreatePoint(pt)
 }
 
 func line(ln [][]float64) *geom.LineString {
-	return geom.NewLineString(geom.AsPointArray(ln))
+	return geom.NewLineString(geom.AsCoordinates(ln))
 }
 
 func polygon(coords [][][]float64) *geom.Polygon {
 	var shells = make([][]*geom.Point, 0)
 	for _, ln := range coords {
-		shells = append(shells, geom.AsPointArray(ln))
+		shells = append(shells, geom.AsCoordinates(ln))
 	}
 	return geom.NewPolygon(shells...)
 }

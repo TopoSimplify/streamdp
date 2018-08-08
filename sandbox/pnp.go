@@ -70,8 +70,8 @@ func main() {
 	//var cwkt = "POLYGON (( 278 307, 270 298, 274 286, 279 272, 301 274, 308 288, 311 304, 296 308, 278 307 ))"
 	var cwkt = "POLYGON (( 510 430, 520 420, 530 430, 520 440, 530 440, 520 430, 510 430 ))"
 	var coords = geom.NewPolygonFromWKT(cwkt).Coordinates()[0]
-	var bln = pointInPolygon(coords, geom.NewPointXY(  525.5869623409229 ,438.78965670087933))
-	var bln2 = completely_in_ring(coords, geom.NewPointXY(  525.5869623409229 ,438.78965670087933))
+	var bln = pointInPolygon(coords, geom.PointXY(  525.5869623409229 ,438.78965670087933))
+	var bln2 = completely_in_ring(coords, geom.PointXY(  525.5869623409229 ,438.78965670087933))
 	fmt.Println(bln)
 	fmt.Println("in ring ", bln2)
 }

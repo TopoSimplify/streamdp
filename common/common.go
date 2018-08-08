@@ -73,7 +73,7 @@ func popLeftHull(que *deque.Deque) *node.Node {
 }
 
 //node.Nodes from Rtree boxes
-func nodesFromBoxes(iter []rtree.BoxObj) []*node.Node {
+func nodesFromBoxes(iter []rtree.Obj) []*node.Node {
 	var nodes = make([]*node.Node, 0, len(iter))
 	for _, h := range iter {
 		nodes = append(nodes, h.(*node.Node))
@@ -82,7 +82,7 @@ func nodesFromBoxes(iter []rtree.BoxObj) []*node.Node {
 }
 
 //node.Nodes from Rtree nodes
-func nodesFromRtreeNodes(iter []*rtree.Node) []*node.Node {
+func nodesFromRtreeNodes(iter []*rtree.rNode) []*node.Node {
 	var nodes = make([]*node.Node, 0, len(iter))
 	for _, h := range iter {
 		nodes = append(nodes, h.GetItem().(*node.Node))
