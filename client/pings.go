@@ -48,13 +48,13 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 
 	var done = make(chan struct{})
 
-	vessel := func(v *store.MTraj, wg *sync.WaitGroup) {
+	var vessel = func(v *store.MTraj, wg *sync.WaitGroup) {
 		var id = v.MMSI
 		var expected = len(v.Traj)
 		var count = 0
 
 		for _, loc := range v.Traj {
-			ping := mtrafic.Ping{
+			var ping = mtrafic.Ping{
 				MMSI:   id,
 				Time:   loc.Time,
 				X:      loc.X,
@@ -63,7 +63,7 @@ func vesselPings(dir string, filter, ignoreDirs []string, batchSize int) {
 				Status: loc.Status,
 			}
 
-			token, err := mtrafic.Serialize(ping)
+			var token, err = mtrafic.Serialize(ping)
 			if err != nil {
 				log.Panic(err)
 			}

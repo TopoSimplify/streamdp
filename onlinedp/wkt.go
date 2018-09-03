@@ -7,14 +7,14 @@ import (
 )
 
 //str polyline
-func wktLineString(coords []*geom.Point, dim int) string {
+func wktLineString(coords []geom.Point, dim int) string {
 	if len(coords) == 0 {
 		panic("empty coordinates")
 	}
 	n := len(coords)
 	lnstr := make([]string, n)
 	for i := 0; i < n; i++ {
-		lnstr[i] = coordStr(coords[i], dim)
+		lnstr[i] = coordStr(&coords[i], dim)
 	}
 	return "(" + strings.Join(lnstr, ", ") + ")"
 }

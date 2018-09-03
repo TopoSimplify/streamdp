@@ -34,7 +34,7 @@ func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
 
 //Constrain for self-intersection as a result of simplification
 //returns boolean : is hull collapsible
-func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node, selections *[]*db.Node, excludeRanges ...*rng.Rng) bool {
+func (self *OnlineDP) SelectBySelfIntersection(options *opts.Opts, hull *db.Node, selections *[]*db.Node, excludeRanges ...rng.Rng) bool {
 	//assume hull is valid and proof otherwise
 	var bln = true
 	// find hull neighbours

@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"github.com/intdxdt/geom"
 	"github.com/TopoSimplify/db"
-	"github.com/TopoSimplify/dp"
 	"github.com/TopoSimplify/rng"
 	"github.com/TopoSimplify/pln"
 	"github.com/TopoSimplify/streamdp/common"
@@ -25,43 +24,31 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func linearCoords(wkt string) []*geom.Point {
-	return geom.NewLineStringFromWKT(wkt).Coordinates()
+func linearCoords(wkt string) geom.Coords {
+	return geom.NewLineStringFromWKT(wkt).Coordinates
 }
 
-//hull geom
-func hullGeom(coords []*geom.Point) geom.Geometry {
-	var g geom.Geometry
 
-	if len(coords) > 2 {
-		g = geom.NewPolygon(coords)
-	} else if len(coords) == 2 {
-		g = geom.NewLineString(coords)
-	} else {
-		g = coords[0].Clone()
-	}
-	return g
-}
 
-func createHulls(indxs [][]int, coords []*geom.Point) []*db.Node {
+func createHulls(indxs [][]int, coords geom.Coords) []*db.Node {
 	poly := pln.CreatePolyline(coords)
 	hulls := make([]*db.Node, 0)
 	for _, o := range indxs {
 		r := rng.Range(o[0], o[1])
-		n := db.NewDBNode(poly.SubCoordinates(r), r, 1, hullGeom)
+		n := db.NewDBNode(poly.SubCoordinates(r), r, 1, common.Geometry)
 		hulls = append(hulls, n)
 	}
 	return hulls
 }
 
-func createNodes(indxs [][]int, coords []*geom.Point) []*db.Node {
+func createNodes(indxs [][]int, coords geom.Coords) []*db.Node {
 	poly := pln.CreatePolyline(coords)
 	hulls := make([]*db.Node, 0)
 	var fid = rand.Intn(100)
 	for _, o := range indxs {
 		var r = rng.Range(o[0], o[1])
 		//var dpnode = newNodeFromPolyline(poly, r, dp.NodeGeometry)
-		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, dp.NodeGeometry, "x7")
+		var n = db.NewDBNode(poly.SubCoordinates(r), r, fid, common.Geometry)
 		hulls = append(hulls, n)
 	}
 	return hulls

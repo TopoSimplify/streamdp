@@ -36,7 +36,7 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 	for h.Next() {
 		h.Scan(&gob)
 		var o = db.Deserialize(gob)
-		var i, j = 0, len(o.Coordinates)-1
+		var i, j = 0, o.Coordinates.Len()-1
 
 		if index == -1 {
 			coordinates = append(coordinates, []*pt.Pt{})
@@ -51,12 +51,12 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 
 		if last == nil {
 			coordinates[index] = append(coordinates[index],
-				&pt.Pt{Point: o.Coordinates[i], I: o.Range.I},
-				&pt.Pt{Point: o.Coordinates[j], I: o.Range.J},
+				&pt.Pt{Point: *o.Coordinates.Pt(i), I: o.Range.I},
+				&pt.Pt{Point: *o.Coordinates.Pt(j), I: o.Range.J},
 			)
 		} else if last.I == o.Range.I {
 			coordinates[index] = append(coordinates[index],
-				&pt.Pt{Point: o.Coordinates[j], I: o.Range.J},
+				&pt.Pt{Point: *o.Coordinates.Pt(j), I: o.Range.J},
 			)
 		} else {
 			fmt.Println(query)
@@ -72,7 +72,7 @@ func (self *OnlineDP) SaveSimplification(fid int) {
 	buf.WriteString("MULTILINESTRING (")
 
 	for i, coords := range coordinates {
-		var sub = make([]*geom.Point, len(coords))
+		var sub = make([]geom.Point, len(coords))
 		for idx, o := range coords {
 			sub[idx] = o.Point
 		}

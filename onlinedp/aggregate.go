@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"github.com/TopoSimplify/db"
-	"github.com/TopoSimplify/dp"
 	"github.com/TopoSimplify/streamdp/common"
 )
 
@@ -85,13 +84,13 @@ func (self *OnlineDP) fragmentMerger(hull *db.Node) []string {
 
 	if na != nil {
 		ma = self.ContiguousFragmentsAtThreshold(
-			self.Score, hull, na, dp.NodeGeometry,
+			self.Score, hull, na, common.Geometry,
 		)
 	}
 
 	if nb != nil {
 		mb = self.ContiguousFragmentsAtThreshold(
-			self.Score, hull, nb, dp.NodeGeometry,
+			self.Score, hull, nb, common.Geometry,
 		)
 	}
 

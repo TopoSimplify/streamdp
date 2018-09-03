@@ -10,7 +10,10 @@ import (
 
 //Merge contiguous fragments based combined score
 func (self *OnlineDP) ContiguousFragmentsAtThreshold(
-	scoreFn func([]*geom.Point) (int, float64), ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
+	scoreFn func(geom.Coords) (int, float64),
+	ha, hb *db.Node,
+	gfn func(geom.Coords) geom.Geometry,
+) *db.Node {
 
 	if !ha.Range.Contiguous(hb.Range) {
 		log.Panic("node are not contiguous")
@@ -25,13 +28,13 @@ func (self *OnlineDP) ContiguousFragmentsAtThreshold(
 }
 
 //Merge two ranges
-func Range(ra, rb *rng.Rng) *rng.Rng {
+func Range(ra, rb rng.Rng) rng.Rng {
 	var ranges = common.SortInts(append(ra.AsSlice(), rb.AsSlice()...))
 	// i...[ra]...k...[rb]...j
 	return rng.Range(ranges[0], ranges[len(ranges)-1])
 }
 
-func ContiguousCoordinates(prev, next *db.Node) []*geom.Point {
+func ContiguousCoordinates(prev, next *db.Node) geom.Coords {
 	if !prev.Range.Contiguous(next.Range) {
 		panic("node are not contiguous")
 	}
@@ -40,15 +43,14 @@ func ContiguousCoordinates(prev, next *db.Node) []*geom.Point {
 		prev, next = next, prev
 	}
 
-	var coordinates = prev.Coordinates
-	var n = len(coordinates) - 1
-	coordinates = append(coordinates[:n:n], next.Coordinates...)
-	return coordinates
+	var coordinates = prev.Coordinates.Points()
+	coordinates = append(coordinates, next.Coordinates.Points()...)
+	return geom.Coordinates(coordinates)
 }
 
 //Merge contiguous hulls
-func contiguousFragments(coordinates []*geom.Point, ha, hb *db.Node, gfn geom.GeometryFn) *db.Node {
+func contiguousFragments(coordinates geom.Coords, ha, hb *db.Node, gfn func(geom.Coords) geom.Geometry) *db.Node {
 	var r = Range(ha.Range, hb.Range)
 	// i...[ha]...k...[hb]...j
-	return db.NewDBNode(coordinates, r, ha.FID,  gfn)
+	return db.NewDBNode(coordinates, r, ha.FID, gfn)
 }

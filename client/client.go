@@ -12,6 +12,7 @@ import (
 	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/streamdp/config"
 	"github.com/TopoSimplify/streamdp/common"
+	"github.com/intdxdt/fileutil"
 )
 
 var Port int
@@ -30,16 +31,16 @@ func init() {
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	var pwd         = common.ExecutionDir()
-	var dataDir     = filepath.Join(pwd, "../data")
-	var srcFile     = filepath.Join(pwd, "../resource/src.toml")
-	var ignoreDirs  = []string{".git", ".idea"}
-	var filter      = []string{"toml"}
+	var pwd = common.ExecutionDir()
+	var dataDir = filepath.Join(pwd, "../data")
+	var srcFile = filepath.Join(pwd, "../resource/src.toml")
+	var ignoreDirs = []string{".git", ".idea"}
+	var filter = []string{"toml"}
 
 	ClearHistoryAddress = fmt.Sprintf("http://%v:%v/history/clear", Host, Port)
 	Address = fmt.Sprintf("http://%v:%v/ping", Host, Port)
 
-	var serverCfg = (&config.ServerConfig{}).Load(srcFile)
+	var serverCfg = (&config.ServerConfig{}).Load(readTOMLString(srcFile))
 	var dbCfg = serverCfg.DBConfig()
 	var connSettings = fmt.Sprintf(
 		"user=%s password=%s dbname=%s sslmode=disable",
@@ -68,4 +69,12 @@ func main() {
 
 	//simplify
 	//runProcess(SimplifyAddress)
+}
+
+func readTOMLString(fname string) string {
+	var tom, err = fileutil.ReadAllOfFile(fname)
+	if err != nil {
+		panic(err)
+	}
+	return tom
 }

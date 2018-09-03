@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"github.com/TopoSimplify/streamdp/mtrafic"
 	"github.com/pkg/errors"
+	"fmt"
 )
 
 //post to server
@@ -18,6 +19,8 @@ func postToServer(token string, mmsi int, keepAlive bool) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	fmt.Println(msg)
 
 	_, err = post(Address, msg)
 	if err != nil {

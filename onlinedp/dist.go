@@ -10,9 +10,8 @@ import (
 func IsDistRelateValid(options *opts.Opts, hull *db.Node, contexts *ctx.ContextGeometries) bool {
 	var minDistance = options.MinDist
 	var seg = hull.Segment()
-	var lnGeom = hull.Polyline().Geometry
+	var ln = hull.Polyline().Geometry()
 	var original, simple float64
-	var segGeom = seg
 	var g *ctx.ContextGeometry
 
 	var bln = true
@@ -20,8 +19,8 @@ func IsDistRelateValid(options *opts.Opts, hull *db.Node, contexts *ctx.ContextG
 
 	for i, n := 0, contexts.Len(); bln && i < n; i++ {
 		g = geometries[i]
-		original = lnGeom.Distance(g.Geom)
-		simple = segGeom.Distance(g.Geom)
+		original = ln.Distance(g.Geom)
+		simple = seg.Distance(g.Geom)
 
 		//if original violates constraint, then simple can
 		// >= than original or <= original, either way should be true

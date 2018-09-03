@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	_ "github.com/lib/pq"
-	"github.com/TopoSimplify/streamdp/mtrafic"
 	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/TopoSimplify/streamdp/mtrafic"
 )
 
 func (server *Server) getTaskStatus(ctx *gin.Context) {
@@ -37,10 +37,10 @@ func (server *Server) clearHistory(ctx *gin.Context) {
 	ctx.JSON(Success, gin.H{"message": "success"})
 }
 
-//func (s *ServerConfig) simplify(ctx *gin.Context) {
-//	s.OnlineDP.Simplify()
-//	ctx.JSON(Success, gin.H{"message": "success"})
-//}
+// func (s *ServerConfig) simplify(ctx *gin.Context) {
+// 	s.OnlineDP.Simplify()
+// 	ctx.JSON(Success, gin.H{"message": "success"})
+// }
 
 func (server *Server) trafficRouter(ctx *gin.Context) {
 	var msg = &mtrafic.PingMsg{}

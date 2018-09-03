@@ -5,7 +5,7 @@ import "github.com/intdxdt/geom"
 type LinearGeometry struct {
 	Id          int
 	Part        int
-	Coordinates []*geom.Point
+	Coordinates geom.Coords
 }
 
 func NewLinearGeometry(id int, part int, coords [][]float64) *LinearGeometry {

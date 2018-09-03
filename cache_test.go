@@ -32,19 +32,19 @@ func TestCmp(t *testing.T) {
 			g.Assert(cache.first().I).Equal(0)
 			g.Assert(cache.last().I).Equal(4)
 
-			g.Assert(cache.first().Point.Equals2D(coords[0].Point)).IsTrue()
-			g.Assert(cache.last().Point.Equals2D(coords[4].Point)).IsTrue()
+			g.Assert(cache.first().Point.Equals2D(&coords[0].Point)).IsTrue()
+			g.Assert(cache.last().Point.Equals2D( &coords[4].Point)).IsTrue()
 
 			cache.pop()
 
 			g.Assert(cache.size()).Equal(4)
-			g.Assert(cache.last().Point.Equals2D(coords[3].Point)).IsTrue()
+			g.Assert(cache.last().Point.Equals2D(&coords[3].Point)).IsTrue()
 			g.Assert(cache.last().I).Equal(3)
 
 			cache.pop()
 
 			g.Assert(cache.size()).Equal(3)
-			g.Assert(cache.last().Point.Equals2D(coords[2].Point)).IsTrue()
+			g.Assert(cache.last().Point.Equals2D(&coords[2].Point)).IsTrue()
 			g.Assert(cache.last().I).Equal(2)
 
 			var cacheClone = cache.clone()

@@ -13,6 +13,10 @@ import (
 	"github.com/intdxdt/math"
 	"github.com/intdxdt/rtree"
 	"github.com/intdxdt/deque"
+	"github.com/TopoSimplify/lnr"
+	"github.com/TopoSimplify/pln"
+	"github.com/TopoSimplify/rng"
+	"github.com/intdxdt/iter"
 )
 
 const (
@@ -27,6 +31,45 @@ func init() {
 
 //Note : column fields corresponding to node.ColumnValues
 const NodeColumnFields = "fid, node, geom, i, j, size, snapshot"
+
+//hull geom
+func Geometry(coordinates geom.Coords) geom.Geometry {
+	var g geom.Geometry
+	if coordinates.Len() > 2 {
+		g = geom.NewPolygon(coordinates)
+	} else if coordinates.Len() == 2 {
+		g = geom.NewLineString(coordinates)
+	} else {
+		g = coordinates.Pt(0)
+	}
+	return g
+}
+
+
+func LinearCoords(wkt string) geom.Coords {
+	return geom.NewLineStringFromWKT(wkt).Coordinates
+}
+
+func CreateHulls(id *iter.Igen, indices [][]int, coords geom.Coords, instance lnr.Linegen) []node.Node {
+	var poly = pln.CreatePolyline(coords)
+	var hulls []node.Node
+	for _, o := range indices {
+		hulls = append(hulls, nodeFromPolyline(
+			id, poly, rng.Range(o[0], o[1]), Geometry, instance,
+		))
+	}
+	return hulls
+}
+
+//New Node
+func nodeFromPolyline(
+	id *iter.Igen,
+	polyline pln.Polyline,
+	rng rng.Rng,
+	geomFn func(geom.Coords) geom.Geometry,
+	instance lnr.Linegen) node.Node {
+	return node.CreateNode(id, polyline.SubCoordinates(rng), rng, geomFn, instance)
+}
 
 func SnapshotNodeColumnValues(srid int, snapStatus int,  nodes ...*db.Node) [][]string {
 	var colVals = func(n *db.Node) []string {
@@ -73,7 +116,7 @@ func popLeftHull(que *deque.Deque) *node.Node {
 }
 
 //node.Nodes from Rtree boxes
-func nodesFromBoxes(iter []rtree.Obj) []*node.Node {
+func nodesFromBoxes(iter []rtree.BoxObject) []*node.Node {
 	var nodes = make([]*node.Node, 0, len(iter))
 	for _, h := range iter {
 		nodes = append(nodes, h.(*node.Node))
@@ -81,14 +124,7 @@ func nodesFromBoxes(iter []rtree.Obj) []*node.Node {
 	return nodes
 }
 
-//node.Nodes from Rtree nodes
-func nodesFromRtreeNodes(iter []*rtree.rNode) []*node.Node {
-	var nodes = make([]*node.Node, 0, len(iter))
-	for _, h := range iter {
-		nodes = append(nodes, h.GetItem().(*node.Node))
-	}
-	return nodes
-}
+
 
 //hull point compare
 func PointIndexCmp(a interface{}, b interface{}) int {

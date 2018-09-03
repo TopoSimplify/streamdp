@@ -22,7 +22,7 @@ type OnlineDP struct {
 	Src         *db.DataSrc
 	Const       *db.DataSrc
 	Options     *opts.Opts
-	Score       func([]*geom.Point) (int, float64)
+	Score       func(geom.Coords) (int, float64)
 	Independent bool
 }
 
@@ -31,7 +31,7 @@ func (self *OnlineDP) ScoreRelation(val float64) bool {
 }
 
 func NewOnlineDP(src, constraints *db.DataSrc, options *opts.Opts,
-	offsetScore func([]*geom.Point) (int, float64), independent bool) *OnlineDP {
+	offsetScore func(geom.Coords) (int, float64), independent bool) *OnlineDP {
 	return &OnlineDP{
 		Src:         src,
 		Const:       constraints,

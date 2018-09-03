@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"log"
 	"bytes"
-	"github.com/TopoSimplify/db"
-	"github.com/TopoSimplify/dp"
-	"github.com/TopoSimplify/streamdp/common"
 	"github.com/intdxdt/fan"
+	"github.com/TopoSimplify/db"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 func (self *OnlineDP) HasMoreDeformables(fid int) bool {
@@ -199,7 +198,7 @@ func (self *OnlineDP) SplitDeformables(fid int) {
 	var worker = func(v interface{}) interface{} {
 		var hull = v.(*db.Node)
 		if hull.Range.Size() > 1 {
-			var ha, hb = AtScoreSelection(hull, self.Score, dp.NodeGeometry)
+			var ha, hb = AtScoreSelection(hull, self.Score, common.Geometry)
 			var vals = common.SnapshotNodeColumnValues(self.Src.SRID, common.Snap, ha, hb)
 			return db.SQLInsertIntoTable(self.Src.Table, common.NodeColumnFields, vals)
 		}

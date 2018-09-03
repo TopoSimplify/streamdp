@@ -7,6 +7,6 @@ import (
 )
 
 //DirectionRelate Relate
-func DirectionRelate(coordinates []*geom.Point, contexts *ctx.ContextGeometries) bool {
+func DirectionRelate(coordinates geom.Coords, contexts *ctx.ContextGeometries) bool {
 	return homotopy.Homotopy(coordinates, contexts)
 }

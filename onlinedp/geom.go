@@ -8,8 +8,7 @@ import (
 //Checks geometric relation to other context geometries
 func IsGeomRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
 	var seg = hull.Segment()
-	var lnGeom = hull.Polyline().Geometry
-	var segGeom = seg
+	var ln = hull.Polyline().Geometry()
 	var lnGInter, segGInter bool
 	var g *ctx.ContextGeometry
 
@@ -18,8 +17,8 @@ func IsGeomRelateValid(hull *db.Node, contexts *ctx.ContextGeometries) bool {
 
 	for i, n := 0, contexts.Len(); bln && i < n; i++ {
 		g = geometries[i]
-		lnGInter = lnGeom.Intersects(g.Geom)
-		segGInter = segGeom.Intersects(g.Geom)
+		lnGInter = ln.Intersects(g.Geom)
+		segGInter = seg.Intersects(g.Geom)
 
 		bln = !((segGInter && !lnGInter) || (!segGInter && lnGInter) )
 	}

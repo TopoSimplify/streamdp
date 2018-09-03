@@ -58,7 +58,7 @@ func (self *OnlineDP) FindContiguousNodeNeighbours(node *db.Node) (*db.Node, *db
 	return Neighbours(node, nodes)
 }
 
-func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...*rng.Rng) []*db.Node {
+func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, excludeRanges ...rng.Rng) []*db.Node {
 	var query = `
 		SELECT id, fid, node
 		FROM  %v
@@ -143,7 +143,7 @@ func geometries(g *geojson.Geometry) []geom.Geometry {
 	var gtype = strings.ToLower(string(g.Type))
 
 	if gtype == "point" {
-		gs = append(gs, point(g.Point))
+		gs = append(gs, geom.CreatePoint(g.Point))
 	} else if gtype == "multipoint" {
 		gs = append(gs, multiPoint(g.MultiPoint)...)
 	} else if gtype == "linestring" {
@@ -159,16 +159,12 @@ func geometries(g *geojson.Geometry) []geom.Geometry {
 	return gs
 }
 
-func point(pt []float64) *geom.Point {
-	return geom.CreatePoint(pt)
-}
-
 func line(ln [][]float64) *geom.LineString {
 	return geom.NewLineString(geom.AsCoordinates(ln))
 }
 
 func polygon(coords [][][]float64) *geom.Polygon {
-	var shells = make([][]*geom.Point, 0)
+	var shells = make([]geom.Coords, 0)
 	for _, ln := range coords {
 		shells = append(shells, geom.AsCoordinates(ln))
 	}
@@ -186,7 +182,7 @@ func multiLine(mlns [][][]float64) []geom.Geometry {
 func multiPoint(coords [][]float64) []geom.Geometry {
 	var gs []geom.Geometry
 	for _, pt := range coords {
-		gs = append(gs, point(pt))
+		gs = append(gs, geom.CreatePoint(pt))
 	}
 	return gs
 }

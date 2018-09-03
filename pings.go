@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/streamdp/mtrafic"
 )
@@ -8,6 +9,10 @@ import (
 func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 	var id int
 	var nds = make([]*db.Node, 0)
+
+	fmt.Println(server.OnlineDP)
+	fmt.Println(server.OnlineDP.Options)
+
 	var options = server.OnlineDP.Options
 
 	if msg.KeepAlive && len(msg.Ping) > 0 {
@@ -19,7 +24,6 @@ func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 
 		id = ping.MMSI
 		var node = VesselHistory.Update(id, ping, options)
-		//node
 		if node != nil {
 			nds = append(nds, node)
 		}
@@ -34,7 +38,7 @@ func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 		}
 	}
 
-	//send to input stream
+	// send to input stream
 	if len(nds) > 0 {
 		server.InputStream <- nds
 	}

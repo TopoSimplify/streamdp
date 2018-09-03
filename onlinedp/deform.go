@@ -31,19 +31,13 @@ func nonContiguousCandidates(options *opts.Opts, a, b *db.Node) (*db.Node, *db.N
 	var aseg = a.Segment()
 	var bseg = b.Segment()
 
-	var aln = a.Polyline()
-	var bln = b.Polyline()
+	var aln = a.Polyline().Geometry()
+	var bln = b.Polyline().Geometry()
 
-	var asegGeom = aseg.Segment
-	var bsegGeom = bseg.Segment
-
-	var alnGeom = aln.Geometry
-	var blnGeom = bln.Geometry
-
-	var asegIntersBseg = asegGeom.Intersects(bsegGeom)
-	var asegIntersBln = asegGeom.Intersects(blnGeom)
-	var bsegIntersAln = bsegGeom.Intersects(alnGeom)
-	var alnIntersBln = alnGeom.Intersects(blnGeom)
+	var asegIntersBseg = aseg.Intersects(bseg)
+	var asegIntersBln = aseg.Intersects(bln)
+	var bsegIntersAln = bseg.Intersects(aln)
+	var alnIntersBln = aln.Intersects(bln)
 	var sa, sb *db.Node
 
 	if asegIntersBseg && asegIntersBln && (!alnIntersBln) {
@@ -53,8 +47,8 @@ func nonContiguousCandidates(options *opts.Opts, a, b *db.Node) (*db.Node, *db.N
 	} else if alnIntersBln {
 		// find out whether is a shared vertex or overlap
 		// is aseg inter bset  --- dist --- aln inter bln > relax dist
-		var ptLns = alnGeom.Intersection(blnGeom)
-		var atSeg = aseg.Intersection(bsegGeom)
+		var ptLns = aln.Intersection(bln)
+		var atSeg = aseg.Intersection(bseg)
 
 		// if segs are disjoint but lines intersect, deform a&b
 		if len(atSeg) == 0 && len(ptLns) > 0 {

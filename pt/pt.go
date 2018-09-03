@@ -6,7 +6,7 @@ import (
 )
 
 type Pt struct {
-	*geom.Point
+	geom.Point
 	Ping *mtrafic.Ping
 	I    int
 }

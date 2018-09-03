@@ -24,7 +24,7 @@ func TestOnline(t *testing.T) {
 			var intRanges = [][]int{
 				{0, 2}, {2, 4}, {4, 9}, {9, 14},
 				{14, 15}, {15, 16}, {16, 17}, {17, 18},
-				{18, 19}, {19, len(coords) - 1}}
+				{18, 19}, {19, coords.Len() - 1}}
 			var hulls = createNodes(intRanges, coords)
 			//printNodes(hulls)
 			var fid = hulls[0].FID

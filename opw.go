@@ -3,14 +3,15 @@ package main
 import (
 	"log"
 	"sort"
+	"github.com/intdxdt/geom"
 	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/lnr"
-	"github.com/TopoSimplify/rng"
 	"github.com/TopoSimplify/opts"
+	"github.com/TopoSimplify/rng"
 	"github.com/TopoSimplify/streamdp/pt"
-	"github.com/intdxdt/geom"
-	"github.com/TopoSimplify/streamdp/offset"
 	"github.com/TopoSimplify/streamdp/mtrafic"
+	"github.com/TopoSimplify/streamdp/offset"
+	"github.com/TopoSimplify/streamdp/common"
 )
 
 type OPWType int
@@ -19,7 +20,7 @@ var ScoreFn = offset.MaxSEDOffset
 var OPWScoreFn = offset.OPWMaxSEDOffset
 
 const (
-	NOPW              OPWType = iota
+	NOPW OPWType = iota
 	BOPW
 	MinimumCacheLimit = 3
 	MaximumCacheLimit = 1000000
@@ -31,7 +32,7 @@ const (
 	Aground  = 6
 )
 
-//SimplificationType OPW
+// SimplificationType OPW
 type OPW struct {
 	Id            int
 	Nodes         DBNodes
@@ -44,7 +45,7 @@ type OPW struct {
 	float         int
 }
 
-//Creates a new constrained DP Simplification instance
+// Creates a new constrained DP Simplification instance
 func NewOPW(options *opts.Opts, opwType OPWType, offsetScore lnr.ScoreFn, maxCacheSize ...int) *OPW {
 	var maxCacheLimit = MaximumCacheLimit
 	if len(maxCacheSize) > 0 {
@@ -70,7 +71,7 @@ func (self *OPW) ScoreRelation(val float64) bool {
 func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	var I = 0
 	var node *db.Node
-	var pnt = geom.PointXYZ(ping.X, ping.Y, float64(ping.Time.Unix()))
+	var pnt = geom.Point{ping.X, ping.Y, float64(ping.Time.Unix())}
 	if self.cache.size() > 0 {
 		I = self.cache.lastIndex() + 1
 	}
@@ -82,7 +83,7 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 	var rmBool = (ping.Status == AtAnchor) ||
 		(ping.Status == Moored) || (ping.Status == Aground)
 
-	var eqBool = (last != nil) && last.Point.Equals2D(pnt)
+	var eqBool = (last != nil) && last.Point.Equals2D(&pnt)
 
 	if last != nil {
 		var rmLBool = (last.Ping.Status == AtAnchor) ||
@@ -107,7 +108,7 @@ func (self *OPW) Push(ping *mtrafic.Ping) *db.Node {
 
 	var index, val = OPWScoreFn(self.cache)
 
-	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit  {
+	if self.ScoreRelation(val) || self.cache.size() >= self.MaxCacheLimit {
 		if self.Type == NOPW {
 			node = self.aggregateNOPW(index)
 		} else if self.Type == BOPW {
@@ -148,8 +149,8 @@ func (self *OPW) updateFloatAnchor() {
 
 func (self *OPW) aggregateNOPW(index int) *db.Node {
 	var stash Cache
-	self.cache, stash = self.cache.split(index) //update cache
-	self.updateFloatAnchor()                    //update float , anchor
+	self.cache, stash = self.cache.split(index) // update cache
+	self.updateFloatAnchor()                    // update float , anchor
 
 	self.Nodes.Append(self.createNode())
 
@@ -161,8 +162,8 @@ func (self *OPW) aggregateNOPW(index int) *db.Node {
 }
 
 func (self *OPW) aggregateBOPW(index int) *db.Node {
-	var flt = self.cache.pop() //pop float
-	self.updateFloatAnchor()   //update: anchor, float
+	var flt = self.cache.pop() // pop float
+	self.updateFloatAnchor()   // update: anchor, float
 	self.Nodes.Append(self.createNode())
 
 	var nth = self.cache.last()
@@ -180,50 +181,31 @@ func (self *OPW) drainCache(nd *db.Node) *db.Node {
 
 	var i, j = nd.Range.I, self.cache.lastIndex()
 
-	//copy node coordinates
-	var cache = self.nodeAsPoints(nd)
-	//add rest to node coords
+	// copy node coordinates
+	var cache = nd.Coordinates.Clone()
+	// add rest to node coords
 	for _, pnt := range self.cache[1:] {
-		cache = append(cache, pnt.Point)
+		cache.Append( pnt.Point)
 	}
 
-	//new node
-	return db.NewDBNode(cache, rng.Range(i, j), self.Id, NodeGeometry)
+	// new node
+	return db.NewDBNode(cache, rng.Range(i, j), self.Id, common.Geometry)
 }
 
-func (self *OPW) cacheAsPoints() []*geom.Point {
+func (self *OPW) cacheAsPoints() []geom.Point {
 	var n = self.cache.size()
-	var coords = make([]*geom.Point, n, n)
+	var coords = make([]geom.Point, 0, n)
 	for i := 0; i < n; i++ {
-		coords[i] = self.cache[i].Point
+		coords = append(coords, self.cache[i].Point)
 	}
 	return coords
 }
 
-func (self *OPW) nodeAsPoints(nd *db.Node) []*geom.Point {
-	var lnrcoords = nd.Polyline().Coordinates
-	var coords = make([]*geom.Point, len(lnrcoords))
-	copy(coords, lnrcoords)
-	return coords
-}
 
 func (self *OPW) createNode() *db.Node {
 	return db.NewDBNode(
-		self.cacheAsPoints(),
-		rng.Range(self.anchor, self.float),
-		self.Id, NodeGeometry,
+		geom.Coordinates(self.cacheAsPoints()), rng.Range(self.anchor, self.float), self.Id, common.Geometry,
 	)
 }
 
-//hull geom
-func NodeGeometry(coordinates []*geom.Point) geom.Geometry {
-	var g geom.Geometry
-	if len(coordinates) > 2 {
-		g = geom.NewPolygon(coordinates)
-	} else if len(coordinates) == 2 {
-		g = geom.NewLineString(coordinates)
-	} else {
-		g = coordinates[0].Clone()
-	}
-	return g
-}
+
