@@ -6,17 +6,17 @@ import (
 	"flag"
 	"runtime"
 	"os/signal"
-	"github.com/TopoSimplify/offset"
 	"gopkg.in/gin-gonic/gin.v1"
+	"github.com/TopoSimplify/offset"
 )
 
 var Port int
 var Host string
 
-const DebugMode = 0
-const ReleaseMode = 1
-const Error = 500
-const Success = 200
+const DebugMode     = 0
+const ReleaseMode   = 1
+const Error         = 500
+const Success       = 200
 
 var VesselHistory *History
 var SimplificationType = NOPW
@@ -32,7 +32,7 @@ func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var server = NewServer("localhost:8000", gin.DebugMode)
+	var server = NewServer("localhost:8000", gin.ReleaseMode)
 	var c = make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 

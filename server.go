@@ -1,11 +1,11 @@
 package main
 
 import (
+	"sync"
 	_ "github.com/lib/pq"
 	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/streamdp/config"
 	"github.com/TopoSimplify/streamdp/onlinedp"
-	"sync"
 )
 
 const (

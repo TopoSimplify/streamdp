@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+export GIN_MODE=release
+
 rm ./client
 
 pwd="../"

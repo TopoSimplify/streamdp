@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/TopoSimplify/db"
 	"github.com/TopoSimplify/streamdp/mtrafic"
 )
@@ -9,10 +8,6 @@ import (
 func (server *Server) aggregatePings(msg *mtrafic.PingMsg) error {
 	var id int
 	var nds = make([]*db.Node, 0)
-
-	fmt.Println(server.OnlineDP)
-	fmt.Println(server.OnlineDP.Options)
-
 	var options = server.OnlineDP.Options
 
 	if msg.KeepAlive && len(msg.Ping) > 0 {
