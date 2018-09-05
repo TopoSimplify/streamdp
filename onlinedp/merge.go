@@ -44,7 +44,8 @@ func ContiguousCoordinates(prev, next *db.Node) geom.Coords {
 	}
 
 	var coordinates = prev.Coordinates.Points()
-	coordinates = append(coordinates, next.Coordinates.Points()...)
+	var n = len(coordinates) - 1
+	coordinates = append(coordinates[:n:n], next.Coordinates.Points()...)
 	return geom.Coordinates(coordinates)
 }
 

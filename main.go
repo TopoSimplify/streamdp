@@ -32,7 +32,8 @@ func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	var server = NewServer("localhost:8000", gin.ReleaseMode)
+	//var server = NewServer("localhost:8000", gin.ReleaseMode)
+	var server = NewServer("localhost:8000", gin.DebugMode)
 	var c = make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
