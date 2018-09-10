@@ -62,7 +62,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	var query = `
 		SELECT id, fid, node
 		FROM  %v
-		WHERE  ST_DWithin(ST_GeomFromText('%v', %v), geom, %v)
+		WHERE  ST_Intersects(ST_GeomFromText('%v', %v), geom)
 		AND id <> %v AND snapshot=%v `
 	if independentPlns {
 		//if idependent polylines then restrict neighbours to this fid
@@ -73,8 +73,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	query = fmt.Sprintf(query,
 		self.Src.Table,          //table
 		node.WTK, self.Src.SRID, //geom(wkt, srid)
-		EpsilonDist,
-		node.NID, common.Snap, //id != nid
+		node.NID, common.Snap,   //id != nid
 	)
 	var h, err = self.Src.Query(query)
 	if err != nil {
@@ -85,7 +84,7 @@ func (self *OnlineDP) FindNodeNeighbours(node *db.Node, independentPlns bool, ex
 	var id, fid int
 	var gob string
 	var dn *db.Node
-	var neighbs = make([]*db.Node, 0)
+	var neighbs []*db.Node
 
 loopRow:
 	for h.Next() {

@@ -13,9 +13,7 @@ const (
 )
 
 const (
-	concurProcs       = 8
 	MergeFragmentSize = 1
-	EpsilonDist       = 1.0e-5
 )
 
 type OnlineDP struct {

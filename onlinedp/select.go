@@ -18,11 +18,10 @@ func (self *OnlineDP) selectDeformable(hull *db.Node) []*db.Node {
 		return selections
 	}
 
-	// find hull neighbours
-	var neighbs = self.FindNodeNeighbours(hull, self.Independent)
-
 	// self intersection constraint
 	if self.Options.AvoidNewSelfIntersects {
+		// find hull neighbours
+		var neighbs = self.FindNodeNeighbours(hull, self.Independent)
 		self.ByFeatureClassIntersection(hull, neighbs, &selections)
 	}
 
